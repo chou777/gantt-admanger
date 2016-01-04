@@ -1,0 +1,57 @@
+<!doctype html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>Angular Gantt - Gantt chart component for AngularJS (Demo)</title>
+    <meta name="description" content="Gantt chart component for AngularJS">
+    <meta name="viewport" content="width=device-width">
+
+    <link rel="canonical" href="https://www.angular-gantt.com/">
+    <link rel="shortcut icon" href="http://www.angular-gantt.com/img/favicon.ico">
+
+    <meta property="og:title" content="Angular Gantt (Demo)" />
+    <meta property="og:description" content="Gantt chart component for AngularJS" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.angular-gantt.com/demo/" />
+    <meta property="og:image" content="https://www.angular-gantt.com/img/angular-gantt.png" />
+
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+    <link rel="stylesheet" href="styles/vendor.css">
+    <link rel="stylesheet" href="styles/main.css">
+
+</head>
+<body ng-app="bhAdManager" ng-strict-di>
+<!--[if lt IE 7]>
+<p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+<![endif]-->
+
+<div ng-controller="MainCtrl">
+   <div class="container">
+    <form class="form-signin" action="{{ post_url }}" method="post">
+        <h2 class="form-signin-heading" style="text-align: center;">AD SYSTEM</h2>
+        <label for="inputEmail" class="sr-only">Email address</label>
+        <input type="hidden" name="{{ form_token_key }}" value="{{ form_token }}">
+        <div class="form-group">
+            <input class="form-control input-lg" placeholder="Username or Email" type="text" name="username">
+        </div>
+        <div class="form-group">
+            <label for="inputPassword" class="sr-only">Password</label>
+            <input class="form-control input-lg" placeholder="Password" type="password" name="password">
+        </div>
+        <button class="btn btn-lg btn-primary btn-block" type="submit" value="Signin">Sign in</button>
+    </form>
+</div>
+
+</div>
+
+
+
+<!--[if lt IE 9]>
+<script src="scripts/oldieshim.js"></script>
+<![endif]-->
+
+<script src="scripts/vendor.js"></script>
+
+<script src="scripts/scripts.js"></script>
+</body>
+</html>

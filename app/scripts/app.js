@@ -20,8 +20,12 @@ angular.module('bhAdManager', [
     'gantt.groups',
     'gantt.overlap',
     'gantt.resizeSensor',
+    'ngSanitize',
     'mgcrea.ngStrap',
-    'ng-context-menu'
-]).config(['$compileProvider', function($compileProvider) {
+]).config(['$compileProvider', '$modalProvider', function($compileProvider, $modalProvider) {
     $compileProvider.debugInfoEnabled(true); // Remove debug info (angularJS >= 1.3)
+
+    angular.extend($modalProvider.defaults, {
+        html: true
+    });
 }]);

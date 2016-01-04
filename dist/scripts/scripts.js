@@ -1,6 +1,38 @@
 'use strict';
 
 /**
+ * @ngdoc overview
+ * @name bhAdManager
+ * @description
+ * # bhAdManager
+ *
+ * Main module of the application.
+ */
+angular.module('bhAdManager', [
+    'gantt', // angular-gantt.
+    'gantt.movable',
+    'gantt.drawtask',
+    'gantt.tooltips',
+    'gantt.bounds',
+    'gantt.progress',
+    'gantt.table',
+    'gantt.tree',
+    'gantt.groups',
+    'gantt.overlap',
+    'gantt.resizeSensor',
+    'ngSanitize',
+    'mgcrea.ngStrap',
+]).config(['$compileProvider', '$modalProvider', function($compileProvider, $modalProvider) {
+    $compileProvider.debugInfoEnabled(true); // Remove debug info (angularJS >= 1.3)
+
+    angular.extend($modalProvider.defaults, {
+        html: true
+    });
+}]);
+
+'use strict';
+
+/**
  * @ngdoc function
  * @name bhAdManager.controller:MainCtrl
  * @description
@@ -212,7 +244,6 @@ angular.module('bhAdManager')
 
         // Reload data action
         $scope.data = [];
-
         $scope.load = function() {
             $log.info('Start load');
             $scope.options.isLoading = true;
@@ -224,14 +255,12 @@ angular.module('bhAdManager')
                 $http({
                   method: 'GET',
                   url: '/gantt/ajax'
-                }).then(function(response) {
-                    if (response.data.status === 'ok') {
-                        $scope.data = response.data.data;
-                    }else {
-                        alert('Load Data Error');
-                    }
-                }, function(response) {
-                        alert('Load Data Error');
+                }).then(function successCallback(response) {
+                    $scope.data = response.data;
+                }, function errorCallback(response) {
+
+                // called asynchronously if an error occurs
+                // or server returns response with an error status.
                 });
             }
             dataToRemove = undefined;

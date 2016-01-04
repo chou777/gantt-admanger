@@ -1,0 +1,94 @@
+<!doctype html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>Angular Gantt - Gantt chart component for AngularJS (Demo)</title>
+    <meta name="description" content="Gantt chart component for AngularJS">
+    <meta name="viewport" content="width=device-width">
+
+    <link rel="canonical" href="https://www.angular-gantt.com/">
+    <link rel="shortcut icon" href="http://www.angular-gantt.com/img/favicon.ico">
+
+    <meta property="og:title" content="Angular Gantt (Demo)" />
+    <meta property="og:description" content="Gantt chart component for AngularJS" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.angular-gantt.com/demo/" />
+    <meta property="og:image" content="https://www.angular-gantt.com/img/angular-gantt.png" />
+
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+    <!-- build:css(.) styles/vendor.css -->
+    <!-- bower:css -->
+    <link rel="stylesheet" href="bower_components/angular-gantt/assets/angular-gantt.css" />
+    <link rel="stylesheet" href="bower_components/angular-gantt/assets/angular-gantt-plugins.css" />
+    <link rel="stylesheet" href="bower_components/angular-motion/dist/angular-motion.css" />
+    <link rel="stylesheet" href="bower_components/angular-ui-tree/dist/angular-ui-tree.min.css" />
+    <link rel="stylesheet" href="bower_components/font-awesome/css/font-awesome.css" />
+    <!-- endbower -->
+    <!-- endbuild -->
+    <!-- build:css(.tmp) styles/main.css -->
+    <link rel="stylesheet" href="styles/bootstrap.css" />
+    <link rel="stylesheet" href="styles/main.css">
+    <!-- endbuild -->
+
+</head>
+<body ng-app="bhAdManager" ng-strict-di>
+<!--[if lt IE 7]>
+<p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+<![endif]-->
+
+<div ng-controller="MainCtrl">
+   <div class="container">
+    <form class="form-signin" action="{{ post_url }}" method="post">
+        <h2 class="form-signin-heading" style="text-align: center;">AD SYSTEM</h2>
+        <label for="inputEmail" class="sr-only">Email address</label>
+        <input type="hidden" name="{{ form_token_key }}" value="{{ form_token }}">
+        <div class="form-group">
+            <input class="form-control input-lg" placeholder="Username or Email" type="text" name="username">
+        </div>
+        <div class="form-group">
+            <label for="inputPassword" class="sr-only">Password</label>
+            <input class="form-control input-lg" placeholder="Password" type="password" name="password">
+        </div>
+        <button class="btn btn-lg btn-primary btn-block" type="submit" value="Signin">Sign in</button>
+    </form>
+</div>
+
+</div>
+
+
+
+<!-- build:js(.) scripts/oldieshim.js -->
+<!--[if lt IE 9]>
+<script src="bower_components/es5-shim/es5-shim.js"></script>
+<script src="bower_components/json3/lib/json3.js"></script>
+<![endif]-->
+<!-- endbuild -->
+
+<!-- build:js(.) scripts/vendor.js -->
+<!-- bower:js -->
+<script src="bower_components/angular/angular.js"></script>
+<script src="bower_components/moment/moment.js"></script>
+<script src="bower_components/angular-moment/angular-moment.js"></script>
+<script src="bower_components/angular-gantt/assets/angular-gantt.js"></script>
+<script src="bower_components/angular-gantt/assets/angular-gantt-plugins.js"></script>
+<script src="bower_components/angular-native-dragdrop/draganddrop.js"></script>
+<script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
+<script src="bower_components/angular-animate/angular-animate.js"></script>
+<script src="bower_components/angular-strap/dist/angular-strap.js"></script>
+<script src="bower_components/angular-strap/dist/angular-strap.tpl.js"></script>
+<script src="bower_components/angular-ui-tree/dist/angular-ui-tree.js"></script>
+<script src="bower_components/css-element-queries/src/ElementQueries.js"></script>
+<script src="bower_components/css-element-queries/src/ResizeSensor.js"></script>
+<script src="bower_components/moment-range/lib/moment-range.js"></script>
+<script src="bower_components/ng-context-menu/dist/ng-context-menu.js"></script>
+<!-- endbower -->
+<!-- endbuild -->
+
+<!-- build:js({.tmp,app}) scripts/scripts.js -->
+<script src="scripts/app.js"></script>
+<script src="scripts/controllers/adForm.js"></script>
+<script src="scripts/controllers/main.js"></script>
+<script src="scripts/services/sample.js"></script>
+<!-- endbuild -->
+</body>
+</html>
