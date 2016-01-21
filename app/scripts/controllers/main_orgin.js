@@ -43,7 +43,7 @@ angular.module('bhAdManager')
             },
             autoExpand: 'none',
             taskOutOfRange: 'truncate',
-            fromDate: moment(null),
+            fromDate: undefined,
             toDate: undefined,
             rowContent: '<i class="fa fa-align-justify"></i> {{row.model.name}}',
             taskContent : '<i class="fa fa-tasks"></i> {{task.model.name}}',
@@ -56,28 +56,7 @@ angular.module('bhAdManager')
             groupDisplayMode: 'Disabled',
             filterTask: '',
             filterRow: '',
-            timeFrames: {
-                'day': {
-                    start: moment('8:00', 'HH:mm'),
-                    end: moment('20:00', 'HH:mm'),
-                    working: true,
-                    default: true
-                },
-                'noon': {
-                    start: moment('12:00', 'HH:mm'),
-                    end: moment('13:30', 'HH:mm'),
-                    working: false,
-                    default: true
-                },
-                'weekend': {
-                    working: false
-                },
-                'holiday': {
-                    working: false,
-                    color: 'red',
-                    classes: ['gantt-timeframe-holiday']
-                }
-            },
+
             dateFrames: {
                 'weekend': {
                     evaluator: function(date) {

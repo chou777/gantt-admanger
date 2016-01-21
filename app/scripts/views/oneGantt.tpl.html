@@ -1,0 +1,95 @@
+<div id="one-gantt" class="modal" tabindex="-1" role="dialog" ng-controller="OneGantt">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" ng-show="title">
+                <button type="button" class="close" ng-click="$hide()">&times;</button>
+                <h4 class="modal-title" ng-bind-html="title"></h4>
+            </div>
+            <div class="modal-body" ng-show="content">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-inline">
+                                <div class="form-group text-center">
+                                    <label class="control-label"><i class="fa fa-calendar"></i> <i class="fa fa-arrows-h"></i> <i class="fa fa-calendar"></i>   時間區間</label><br>
+                                    <div class="form-group">
+                                        <input type="text" class="form-control" ng-model="options.fromDate" max-date="{{ ng('options.toDate')}}" start-date="{{ ng('options.currentDateValue.toString()')}}" start-week="1" placeholder="From" bs-datepicker>
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="text" class="form-control" ng-model="options.toDate" min-date="{{ ng('options.fromDate')}}" start-date="{{ ng('options.currentDateValue.toString()')}}" start-week="1" placeholder="To" bs-datepicker>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label"><i class="fa fa-database"></i>  時間操作</label><br>
+                                    <div class="btn-group">
+                                        <button class="btn btn-default" ng-click="resetDate()">重設時間</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row top-buffer">
+                    <div class="col-md-12">
+                        <div class="panel-group" bs-collapse>
+                            <div class="panel panel-default">
+                                <div class="panel-collapse" bs-collapse-target>
+                                    <div class="panel-body" context-menu class="panel panel-default position-fixed" data-target="menu-{{ ng('$index') }}">
+                                        <div gantt
+                                             data="data"
+                                             timespans="timespans"
+                                             show-side="options.labelsEnabled"
+                                             daily="options.daily"
+                                             filter-task="{'name': options.filterTask}"
+                                             filter-row="options.filterRow"
+                                             sort-mode="options.sortMode"
+                                             view-scale="options.scale"
+                                             column-width="getColumnWidth(options.width, options.scale, options.zoom)"
+                                             auto-expand="options.autoExpand"
+                                             task-out-of-range="options.taskOutOfRange"
+                                             from-date = "options.fromDate"
+                                             to-date = "options.toDate"
+                                             allow-side-resizing = "options.allowSideResizing"
+                                             task-content = "options.taskContentEnabled ? options.taskContent : undefined"
+                                             row-content = "options.rowContentEnabled ? options.rowContent : undefined"
+                                             current-date="options.currentDate"
+                                             current-date-value="options.currentDateValue"
+                                             headers="options.width && options.shortHeaders || options.longHeaders"
+                                             max-height="options.maxHeight && 300 || 0"
+                                             time-frames="options.timeFrames"
+                                             date-frames="options.dateFrames"
+                                             time-frames-non-working-mode="options.timeFramesNonWorkingMode"
+                                             time-frames-magnet="options.timeFramesMagnet"
+                                             api="options.api"
+                                             column-magnet="options.columnMagnet"
+                                             >
+                                            <gantt-tree enabled="options.sideMode === 'Tree' || options.sideMode === 'TreeTable'"
+                                                        header-content="options.treeHeaderContent"
+                                                        keep-ancestor-on-filter-row="true">
+                                            </gantt-tree>
+                                            <gantt-table enabled="options.sideMode === 'Table' || options.sideMode === 'TreeTable'"
+                                                         columns="options.sideMode === 'TreeTable' ? options.treeTableColumns : options.columns"
+                                                         headers="options.columnsHeaders"
+                                                         classes="options.columnsClasses"
+                                                         formatters="options.columnsFormatters"
+                                                         contents="options.columnsContents"
+                                                         header-contents="options.columnsHeaderContents">
+                                            </gantt-table>
+                                            <gantt-tooltips content="options.tooltipsContent"></gantt-tooltips>
+                                            <gantt-tooltips delay="100" content="options.tooltipsContent"></gantt-tooltips>
+                                            <gantt-resize-sensor></gantt-resize-sensor>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" ng-click="$hide()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

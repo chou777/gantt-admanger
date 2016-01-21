@@ -26,6 +26,7 @@
     <!-- endbower -->
     <!-- endbuild -->
     <!-- build:css(.tmp) styles/main.css -->
+    <link rel="stylesheet" href="styles/colorpicker.css"/>
     <link rel="stylesheet" href="styles/bootstrap.css" />
     <link rel="stylesheet" href="styles/main.css">
     <!-- endbuild -->
@@ -36,20 +37,9 @@
 <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
 <![endif]-->
 
-<div ng-controller="MainCtrl">
-    <div class="navbar navbar-default" role="navigation" bs-navbar>
-        <div class="navbar-header">
-            <a class="navbar-brand" href="http://www.angular-gantt.com">angular-gantt - Gantt chart component for AngularJS</a>
-        </div>
-        <div class="navbar-right navbar-right-spacing">
-            <a class="navbar-text navbar-link" href="http://www.angular-gantt.com"><i class="fa fa-book"></i> Documentation</a>
-            <a class="navbar-text navbar-link" href="https://github.com/angular-gantt/angular-gantt"><i class="fa fa-github"></i> GitHub</a>
-        </div>
-    </div>
-
-
+<div id="main-ctrl" ng-controller="MainCtrl">
     <!-- 讀取中 -->
-    <div class="is-loading-wrap container-content" ng-show="options.isLoading">
+    <div class="is-loading-wrap container-content" ng-if="options.isLoading">
         <div class="is-loading-box container-fluid">
             <div class="row top-buffer">
                 <div class="col-md-12 modal-content">
@@ -68,57 +58,105 @@
                     <div class="panel-group" bs-collapse>
                         <div class="panel panel-default">
                             <div class="panel-heading">
-                                <h4 class="panel-title">
-                                    <a href="" bs-collapse-toggle>Options</a>
-
+                                <h4 class="panel-title clearfix">
+                                   DFP 查詢系統
+                                   <button style="float:right;" class="btn btn-default clearfix"><span class="glyphicon glyphicon-time" aria-hidden="true"></span> 最後更新時間: {{ ng('options.updateTime') }}</button>
+                                   <button style="float:right;" ng-click="handleUpdateDFP()" ng-disabled="updateLoading" class="btn btn-default clearfix">更新DFP資料(大約需3分鐘) </button>
                                 </h4>
                             </div>
+
                             <div class="panel-collapse" bs-collapse-target>
                                 <div class="panel-body">
                                     <div class="container-fluid">
                                         <div class="row">
                                             <div class="form-inline">
-                                                <div class="form-group text-center">
-                                                    <label class="control-label"><i class="fa fa-search"></i> Scale</label><br>
-                                                    <button type="button" style="width: 5em; text-align: left" class="btn btn-default" ng-model="options.scale" bs-options="s for s in ['minute', '5 minutes', 'hour', '3 hours', 'day', 'week', '2 weeks', 'month', 'quarter', '6 months', 'year']" bs-select></button>
+                                              <div class="form-group text-center">
+                                                    <label class="control-label"><i class="fa fa-search"></i> 時間間隔</label><br>
+                                                    <button type="button" style="width: 5em; text-align: left" class="btn btn-default" ng-model="options.scale" bs-options="s for s in ['day', 'week', '2 weeks', 'month', 'quarter', '6 months', 'year']" bs-select></button>
                                                 </div>
 
                                                 <div class="form-group input-append text-center">
-                                                    <label class="control-label"><i class="fa fa-filter"></i> Filter Tasks</label><br>
-                                                    <input type="text" class="form-control" style="width: 8em; text-align: left" ng-model="options.filterTask">
+                                                    <label class="control-label"><i class="fa fa-filter"></i> 篩選委刊單</label><br>
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" style="width: 8em; text-align: left" ng-model="options.filterTask.name" ng-change="writeFilterTask()" ng-disabled="options.selectedTask">
+                                                        <div class="input-group-btn" ng-if="options.filterTask.name != ''">
+                                                            <button type="button" class="btn btn-default" aria-label="close" ng-click="taskCancelSelected()" ng-disabled="options.selectedTask"><span class="glyphicon glyphicon-remove"></span></button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                                 <div class="form-group input-append text-center">
-                                                    <label class="control-label"><i class="fa fa-filter"></i> Filter Rows</label><br>
+                                                    <label class="control-label"><i class="fa fa-filter"></i> 篩選廣告單元</label><br>
                                                     <input type="text" class="form-control" style="width: 8em; text-align: left" ng-model="options.filterRow">
                                                 </div>
                                                 <div class="form-group text-center">
-                                                    <label class="control-label"><i class="fa fa-calendar"></i> <i class="fa fa-arrows-h"></i> <i class="fa fa-calendar"></i> Date range</label><br>
+                                                    <label class="control-label"><i class="fa fa-calendar"></i> <i class="fa fa-arrows-h"></i> <i class="fa fa-calendar"></i>   時間區間</label><br>
                                                     <div class="form-group">
-                                                        <input type="text" class="form-control" ng-model="options.fromDate" max-date="{{options.toDate}}" start-date="{{options.currentDateValue.toString()}}" start-week="1" placeholder="From" bs-datepicker>
+                                                        <input type="text" class="form-control" ng-model="options.fromDate" max-date="{{ ng('options.toDate')}}" start-date="{{ ng('options.currentDateValue.toString()')}}" start-week="1" placeholder="From" bs-datepicker>
                                                     </div>
                                                     <div class="form-group">
-                                                        <input type="text" class="form-control" ng-model="options.toDate" min-date="{{options.fromDate}}" start-date="{{options.currentDateValue.toString()}}" start-week="1" placeholder="To" bs-datepicker>
+                                                        <input type="text" class="form-control" ng-model="options.toDate" min-date="{{ ng('options.fromDate')}}" start-date="{{ ng('options.currentDateValue.toString()')}}" start-week="1" placeholder="To" bs-datepicker>
                                                     </div>
                                                 </div>
                                                 <div class="form-group text-center">
-                                                    <label class="control-label"><i class="fa fa-database"></i> Data actions</label><br>
+                                                    <label class="control-label"><i class="fa fa-database"></i>  時間操作</label><br>
                                                     <div class="btn-group">
-                                                        <button class="btn btn-default" ng-click="resetDate()">Reset Date</button>
+                                                        <button class="btn btn-default" ng-click="resetDate()">重設時間</button>
                                                     </div>
-                                                </div>
-                                                <div class="form-group text-center" ng-show="false">
-                                                    <label class="control-label"><i class="fa fa-pencil-square-o"></i> Edit</label><br>
-                                                    <button type="button" class="btn btn-default" ng-model="options.draw" bs-checkbox>Draw</button>
-                                                    <button type="button" class="btn btn-default" ng-model="options.readOnly" bs-checkbox>Read Only</button>
                                                 </div>
 
                                                 <div class="form-group text-center">
-                                                    <label class="control-label"><i class="fa fa-database"></i> Data actions</label><br>
+                                                    <label class="control-label"><i class="fa fa-database"></i> 資料操作</label><br>
                                                     <div class="btn-group">
                                                         <button class="btn btn-default" ng-click="reload()">Reload</button>
                                                     </div>
                                                 </div>
+
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="alerts-container" class="col-md-12"></div>
+
+            <div class="row" ng-if="selectedTask">
+                <div class="col-md-12">
+                    <div class="panel-group" bs-collapse>
+                        <div class="panel panel-default">
+
+                            <div class="panel-collapse" bs-collapse-target>
+                                <div class="panel-body">
+                                    <div class="container-fluid">
+                                        <div class="row">
+                                            <form class="form-horizontal selectedTask" role="form">
+                                                <div class="form-group">
+                                                    <label class="control-label col-sm-2">委刊單:</label>
+                                                    <div class="col-sm-10">
+                                                       <input type="text" class="form-control" value="{{ selectedTask.orderName }}" disabled="disabled" />
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label col-sm-2">背景顏色:</label>
+                                                    <div class="col-sm-10">
+                                                        <div class="input-group ">
+                                                            <span class="input-group-addon" ng-style="{'background-color':selectedTask.color}" >&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                                                            <input type="text" class="form-control" colorpicker colorpicker-parent="true" ng-model="selectedTask.color">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label col-sm-2"></label>
+                                                    <div class="col-sm-10">
+                                                        <div class="input-group ">
+                                                            <button type="button" ng-click="taskSaveColor()" class="btn btn-success">儲存顏色</button>
+                                                            <button type="button" ng-click="taskCancelSelected()" class="btn btn-danger">取消選取</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
@@ -132,13 +170,13 @@
                     <div class="panel-group" bs-collapse>
                         <div class="panel panel-default">
                             <div class="panel-collapse" bs-collapse-target>
-                                <div class="panel-body" context-menu class="panel panel-default position-fixed" data-target="menu-{{ $index }}">
+                                <div class="panel-body" context-menu class="panel panel-default position-fixed" data-target="menu-{{ ng('$index') }}">
                                     <div gantt
                                          data="data"
                                          timespans="timespans"
                                          show-side="options.labelsEnabled"
                                          daily="options.daily"
-                                         filter-task="{'name': options.filterTask}"
+                                         filter-task="options.filterTask"
                                          filter-row="{'name': options.filterRow}"
                                          sort-mode="options.sortMode"
                                          view-scale="options.scale"
@@ -153,6 +191,7 @@
                                          current-date="options.currentDate"
                                          current-date-value="options.currentDateValue"
                                          headers="options.width && options.shortHeaders || options.longHeaders"
+                                         headers-formats="options.headersFormats"
                                          max-height="options.maxHeight && 300 || 0"
                                          time-frames="options.timeFrames"
                                          date-frames="options.dateFrames"
@@ -173,17 +212,8 @@
                                                      contents="options.columnsContents"
                                                      header-contents="options.columnsHeaderContents">
                                         </gantt-table>
-                                        <gantt-groups enabled="options.groupDisplayMode === 'group' || options.groupDisplayMode === 'overview' || options.groupDisplayMode === 'promote'" display="options.groupDisplayMode"></gantt-groups>
                                         <gantt-tooltips content="options.tooltipsContent"></gantt-tooltips>
-                                        <gantt-bounds></gantt-bounds>
-                                        <gantt-progress></gantt-progress>
-                                        <gantt-movable enabled="!options.readOnly"></gantt-movable>
-                                        <gantt-draw-task
-                                            enabled="options.canDraw"
-                                            move-threshold="2"
-                                            task-factory="options.drawTaskFactory">
-                                        </gantt-draw-task>
-                                        <gantt-overlap></gantt-overlap>
+                                        <gantt-tooltips delay="100" content="options.tooltipsContent"></gantt-tooltips>
                                         <gantt-resize-sensor></gantt-resize-sensor>
                                     </div>
                                 </div>
@@ -192,8 +222,13 @@
                     </div>
                 </div>
             </div>
+
+
+
         </div>
     </div>
+
+
 
 </div>
 
@@ -223,12 +258,15 @@
 <script src="bower_components/css-element-queries/src/ElementQueries.js"></script>
 <script src="bower_components/css-element-queries/src/ResizeSensor.js"></script>
 <script src="bower_components/jsPlumb/dist/js/jsPlumb-2.0.5.js"></script>
+<script src="bower_components/angular-bootstrap-colorpicker/js/bootstrap-colorpicker-module.js"></script>
 <!-- endbower -->
 <!-- endbuild -->
 
 <!-- build:js({.tmp,app}) scripts/scripts.js -->
 <script src="scripts/app.js"></script>
 <script src="scripts/controllers/main.js"></script>
+<script src="scripts/controllers/oneGantt.js"></script>
+
 <!-- endbuild -->
 
 <!-- build:js({.tmp,app}) scripts/sample.js -->
