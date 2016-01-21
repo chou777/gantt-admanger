@@ -22,7 +22,7 @@ angular.module('bhAdManager')
             mode: 'custom',
             scale: 'day',
             sortMode: undefined,
-            isLoading: false,
+            isLoading: true,
             sideMode: 'none',
             daily: true,
             maxHeight: false,
@@ -73,6 +73,10 @@ angular.module('bhAdManager')
                     $timeout(function() {
                         api.scroll.to(api.core.getPositionByDate(dateRange[0]));
                     }, 1000);
+
+                    $timeout(function() {
+                        $scope.options.isLoading = false;
+                    }, 3000);
 
                 });
 
@@ -176,6 +180,7 @@ angular.module('bhAdManager')
 
         // load data action
         $scope.load = function() {
+
             $log.info('Start one gantt load');
             $scope.data = [];
 

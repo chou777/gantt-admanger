@@ -82,10 +82,10 @@ textarea.live-row {
     height: 100%;
     position: fixed;
     display: block;
-    z-index: 1000;
+    z-index: 99999;
     top: 0;
     left: 0;
-    background: rgba(0,0,0,0.9);
+    background: rgba(0,0,0,0.7);
 }
 
 .is-loading-box {
@@ -159,6 +159,26 @@ textarea.live-row {
 .tooltip-content.table tr:first-child td {
     border: 0;
 }
+
+.modal-backdrop.am-fade {
+  opacity: .7;
+  transition: opacity .15s linear;
+  &.ng-enter {
+    opacity: 0;
+    &.ng-enter-active {
+      opacity: .7;
+    }
+  }
+  &.ng-leave {
+    opacity: .7;
+    &.ng-leave-active {
+      opacity: 0;
+    }
+  }
+}
+
+/*one gantt*/
+
 #one-gantt .modal-dialog {
     width: 90%;
     height: 80%;
@@ -179,4 +199,14 @@ textarea.live-row {
     display: block;
     height: 1px;
     width: 100%;
+}
+
+#one-gantt .is-loading-wrap {
+    position: absolute;
+    background-color: rgba(255,255,255,0.7);
+}
+
+#one-gantt .is-loading-box {
+    position: absolute;
+    top: 50%;
 }
