@@ -111,6 +111,13 @@
                                                     </div>
                                                 </div>
 
+                                                <div class="form-group text-center">
+                                                    <label class="control-label"><i class="fa fa-database"></i> Booking</label><br>
+                                                    <div class="btn-group">
+                                                        <button class="btn btn-default" ng-click="handleBooking()">Booking</button>
+                                                    </div>
+                                                </div>
+
                                             </div>
                                         </div>
                                     </div>
@@ -212,8 +219,11 @@
                                                      contents="options.columnsContents"
                                                      header-contents="options.columnsHeaderContents">
                                         </gantt-table>
-                                        <gantt-tooltips content="options.tooltipsContent"></gantt-tooltips>
                                         <gantt-tooltips delay="100" content="options.tooltipsContent"></gantt-tooltips>
+                                        <gantt-context-menus
+                                            enabled="options.contextMenuEnabled"
+                                            task-options="options.contextMenuOptions.task">
+                                        </gantt-context-menus>
                                         <gantt-resize-sensor></gantt-resize-sensor>
                                     </div>
                                 </div>
@@ -257,7 +267,7 @@
 <script src="bower_components/moment-range/dist/moment-range.js"></script>
 <script src="bower_components/css-element-queries/src/ElementQueries.js"></script>
 <script src="bower_components/css-element-queries/src/ResizeSensor.js"></script>
-<script src="bower_components/jsPlumb/dist/js/jsPlumb-2.0.5.js"></script>
+<script src="bower_components/jsPlumb/dist/js/jsPlumb-2.0.6.js"></script>
 <script src="bower_components/angular-bootstrap-colorpicker/js/bootstrap-colorpicker-module.js"></script>
 <!-- endbower -->
 <!-- endbuild -->
@@ -266,6 +276,8 @@
 <script src="scripts/app.js"></script>
 <script src="scripts/controllers/main.js"></script>
 <script src="scripts/controllers/oneGantt.js"></script>
+<script src="scripts/controllers/bookingForm.js"></script>
+
 
 <!-- endbuild -->
 

@@ -1,0 +1,71 @@
+<div id="bookingForm" class="modal" tabindex="-1" role="dialog" ng-controller="bookingForm">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" ng-show="title">
+                <button type="button" class="close" ng-click="$hide()">&times;</button>
+                <h4 class="modal-title" ng-bind-html="title"></h4>
+            </div>
+            <div class="modal-body" ng-show="content">
+                <div class="row top-buffer">
+                    <div class="col-md-12">
+                        <form class="form-horizontal" role="form">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">委刊單</div>
+                                <div class="panel-body" context-menu class="panel panel-default position-fixed">
+                                    <div class="form-group">
+                                        <label class="control-label col-sm-2" for="orderName">委刊單名稱</label>
+                                        <div class="col-sm-10">
+                                            <input type="text" class="form-control" id="orderName">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-sm-2">背景顏色:</label>
+                                        <div class="col-sm-10">
+                                            <div class="input-group ">
+                                                <span class="input-group-addon" ng-style="{'background-color':selectedTask.color}">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                                                <input type="text" class="form-control" colorpicker colorpicker-parent="true" ng-model="selectedTask.color">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                           <div class="panel panel-default">
+                                <div class="panel-body" context-menu class="panel panel-default position-fixed">
+                                    <div class="form-group">
+                                        <label class="control-label col-sm-2" for="lineItemName">委刊項名稱</label>
+                                        <div class="col-sm-10">
+                                            <input type="text" class="form-control" id="lineItemName">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-sm-2" for="lineItemAdUnits">廣告單元</label>
+                                        <div class="col-sm-10">
+                                            <input type="text" class="form-control" id="lineItemAdUnits">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-sm-2" for="lineItemAdUnits">開始時間</label>
+                                        <div class="col-sm-10">
+                                            <input type="text" class="form-control" ng-model="options.fromDate" max-date="{{ ng('options.toDate')}}" start-date="{{ ng('options.currentDateValue.toString()')}}" start-week="1" placeholder="From" bs-datepicker>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-sm-2" for="lineItemAdUnits">結束時間</label>
+                                        <div class="col-sm-10">
+                                            <input type="text" class="form-control" ng-model="options.toDate" min-date="{{ ng('options.fromDate')}}" start-date="{{ ng('options.currentDateValue.toString()')}}" start-week="1" placeholder="To" bs-datepicker>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" ng-click="$hide()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

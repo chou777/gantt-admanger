@@ -16,6 +16,7 @@ angular.module('bhAdManager', [
     'gantt.tree',
     'gantt.groups',
     'gantt.resizeSensor',
+    'gantt.contextmenus',
     'ngSanitize',
     'mgcrea.ngStrap',
     'colorpicker.module',

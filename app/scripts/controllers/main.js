@@ -17,12 +17,6 @@ angular.module('bhAdManager')
 
             $scope.selectedTask = undefined;
 
-            $scope.alert = {
-                title: 'Holy guacamole!',
-                content: 'Best check yo self, you\'re not looking too good.',
-                type: 'info'
-            };
-
             $scope.options = {
                 updateTime: undefined,
                 setSideWidth: 250,
@@ -54,6 +48,21 @@ angular.module('bhAdManager')
                         return to !== undefined ? to.format('lll') : undefined;
                     }
                 },
+                contextMenuOptions:{
+                    'task':
+                        [['task modal', function ($itemScope, $event, model) {
+                            console.log(model);
+                        }],
+                        ['Alert some value', function ($itemScope, $event, model) {
+                            alert('Alert some value');
+                        }],
+                        ['Reload Data', function ($itemScope, $event, model) {
+                            $scope.reload();
+                        }],
+                        ['Clear Data', function ($itemScope, $event, model) {
+                            $scope.clear();
+                        }]],
+                },
                 treeHeaderContent: '<i class="fa fa-align-justify"></i> 廣告單元',
                 columnsHeaderContents: {
                     'model.name': '<i class="fa fa-align-justify"></i> {{getHeader()}}',
@@ -61,7 +70,10 @@ angular.module('bhAdManager')
                 headersFormats: {
                     week: function(column) {
                         return column.date.format('Do [-]') + column.endDate.format('Do') + column.date.format(' [(W]w[)]');
-                    }
+                    },
+                    // day: function(column) {
+                        // return column.date.format('D') + column.date.format('dd');
+                    // }
                 },
                 autoExpand: 'both',
                 taskOutOfRange: 'truncate',
@@ -102,8 +114,6 @@ angular.module('bhAdManager')
                         }, 3000);
                     });
 
-
-
                     api.core.on.ready($scope, function() {
                         $scope.load();
                         $log.info('api on ready');
@@ -136,6 +146,7 @@ angular.module('bhAdManager')
                                     element.on('contextmenu', function(event) {
                                         event.stopPropagation();
                                         event.preventDefault();
+
                                         $log.info('Task Right Click');
                                         $scope.$digest();
                                     });
@@ -167,8 +178,10 @@ angular.module('bhAdManager')
                                             title: directiveScope.row.model.name,
                                             content: 'Prepare your gantt data, please wait one moment...',
                                             templateUrl: '../scripts/views/oneGantt.tpl.html',
-                                            show: true
+                                            show: false
                                         });
+
+                                        $scope._saveGanttModal.$promise.then($scope._saveGanttModal.show);
 
                                         $scope.$digest();
 
@@ -401,5 +414,22 @@ angular.module('bhAdManager')
                 }
             }
 
+            $scope.handleBooking = function() {
+                $log.info('handleBooking');
+
+                var $modalScope = $scope.$new(true);
+
+                $scope._bookingForm = $modal({
+                    scope: $modalScope,
+                    title: '新增委刊單',
+                    content: 'Prepare your gantt data, please wait one moment...',
+                    templateUrl: '../scripts/views/bookingForm.tpl.html',
+                    show: false,
+                });
+
+                $scope._bookingForm.$promise.then($scope._bookingForm.show);
+
+                // $scope.$digest();
+            }
         }
     ]);

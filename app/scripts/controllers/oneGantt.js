@@ -11,11 +11,8 @@
 angular.module('bhAdManager')
     .controller('OneGantt', ['$scope', '$timeout', '$log', 'ganttUtils', 'GanttObjectModel', 'Sample', 'ganttMouseOffset', 'ganttDebounce', 'moment', '$modal', '$popover', '$http', '$sce', '$alert', '$rootScope',
         function($scope, $timeout, $log, utils, ObjectModel, Sample, mouseOffset, debounce, moment, $modal, $popover, $http, $sce, $alert, $rootScope) {
+
         var objectModel;
-        var dataToRemove;
-
-
-        $scope.alert = {title: 'Holy guacamole!', content: 'Best check yo self, you\'re not looking too good.', type: 'info'};
 
         $scope.options = {
             setSideWidth: 250,
@@ -76,7 +73,7 @@ angular.module('bhAdManager')
 
                     $timeout(function() {
                         $scope.options.isLoading = false;
-                    }, 3000);
+                    }, 2000);
 
                 });
 
@@ -121,7 +118,6 @@ angular.module('bhAdManager')
                 refreshIsVisableData();
             }
         });
-
 
         var checkRowIsVisible = function(from, to, rangeFrom, rangeTo) {
             if ((moment(from) >= moment(rangeFrom) && moment(from) <= moment(rangeTo)) ||
