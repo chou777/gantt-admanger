@@ -8,54 +8,85 @@
             <div class="modal-body" ng-show="content">
                 <div class="row top-buffer">
                     <div class="col-md-12">
-                        <form class="form-horizontal" role="form">
+                        <form id="bForm" class="form-horizontal" role="form" name="bForm" novalidate>
                             <div class="panel panel-default">
                                 <div class="panel-heading">委刊單</div>
-                                <div class="panel-body" context-menu class="panel panel-default position-fixed">
+                                <div class="panel-body" class="panel panel-default position-fixed">
                                     <div class="form-group">
                                         <label class="control-label col-sm-2" for="orderName">委刊單名稱</label>
                                         <div class="col-sm-10">
-                                            <input type="text" class="form-control" id="orderName">
+                                            <input type="text" class="form-control" id="orderName" name="orderName" ng-model="bookingForm.orderName" required>
+                                            <div ng-show="bForm.$submitted || bForm.orderName.$touched">
+                                              <div class="error" ng-show="bForm.orderName.$error.required">填寫委刊單</div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="form-group">
                                         <label class="control-label col-sm-2">背景顏色:</label>
                                         <div class="col-sm-10">
-                                            <div class="input-group ">
-                                                <span class="input-group-addon" ng-style="{'background-color':selectedTask.color}">&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                                                <input type="text" class="form-control" colorpicker colorpicker-parent="true" ng-model="selectedTask.color">
+                                            <div class="input-group col-sm-12">
+                                                <label class="input-group-addon" ng-style="{'background-color': bookingForm.orderColor}">&nbsp;&nbsp;&nbsp;&nbsp;</label>
+                                                <input type="text" class="form-control" name="orderColor"  colorpicker colorpicker-parent="true" ng-model="bookingForm.orderColor" required>
+                                            </div>
+                                            <div class="col-sm-12" ng-show="bForm.$submitted || bForm.orderColor.$touched">
+                                                <div class="error" ng-show="bForm.orderColor.$error.required">選取背景色</div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                           <div class="panel panel-default">
-                                <div class="panel-body" context-menu class="panel panel-default position-fixed">
-                                    <div class="form-group">
-                                        <label class="control-label col-sm-2" for="lineItemName">委刊項名稱</label>
-                                        <div class="col-sm-10">
-                                            <input type="text" class="form-control" id="lineItemName">
+                            <div class="lineItems">
+                                <div class="panel panel-default" ng-repeat="lineItem in bookingForm.lineItems track by $index">
+                                    <div class="panel-heading">委刊項目</div>
+                                    <div class="panel-body" class="panel panel-default position-fixed">
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-2" for="{{ 'lineItemName' + $index }}">委刊項名稱</label>
+                                            <div class="col-sm-10">
+                                                <input type="text" class="form-control" name="{{ 'lineItemName' + $index }}" ng-model="lineItem.name" required>
+                                                <div ng-show="bForm.$submitted || bForm['lineItemName'+$index].$touched">
+                                                    <div class="error" ng-show="bForm['lineItemName'+$index].$error.required">填寫委刊項名稱</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-2" for="{{ 'lineItemAdUnits' + $index }}">廣告單元</label>
+                                            <div class="col-sm-10">
+                                                <select name="{{ 'lineItemAdUnits' + $index }}" class="form-control"  ng-model="lineItem.adUnits" required>
+                                                    <option ng-repeat="option in ganttData track by option.id " value="{{option.id}}">{{option.name}}</option>
+                                                </select>
+                                                <div ng-show="bForm.$submitted || bForm['lineItemAdUnits'+ $index].$touched">
+                                                    <div class="error" ng-show="bForm['lineItemAdUnits'+ $index].$error.required">填寫廣告單元</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-2" for="{{ 'lineItemFromDate' + $index }}">開始時間</label>
+                                            <div class="col-sm-10">
+                                                <input type="text" class="form-control" name="{{ 'lineItemFromDate' + $index }}" ng-model="lineItem.fromDate" max-date="{{ lineItem.toDate }}" start-date="{{ lineItem.currentDateValue.toString() }}" start-week="1" placeholder="From" bs-datepicker required>
+                                                <div ng-show="bForm.$submitted || bForm['lineItemFromDate'+$index].$touched">
+                                                    <div class="error" ng-show="bForm['lineItemFromDate'+$index].$error.required">填寫開始時間</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-2" for="{{ 'lineItemToDate' + $index }}">結束時間</label>
+                                            <div class="col-sm-10">
+                                                <input type="text" class="form-control" name="{{ 'lineItemToDate' + $index }}" ng-model="lineItem.toDate" min-date="{{ lineItem.fromDate }}" start-date="{{ lineItem.currentDateValue.toString() }}" start-week="1" placeholder="To" bs-datepicker required>
+                                                <div ng-show="bForm.$submitted || bForm['lineItemToDate'+$index].$touched">
+                                                    <div class="error" ng-show="bForm['lineItemToDate'+$index].$error.required">填寫結束時間</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-sm-10"></div>
+                                            <div class="btn-group col-sm-2">
+                                                <button type="button" style="float: right" class="btn btn-default" ng-click="handleReduceLineItem($index)">移除委刊項</button>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label class="control-label col-sm-2" for="lineItemAdUnits">廣告單元</label>
-                                        <div class="col-sm-10">
-                                            <input type="text" class="form-control" id="lineItemAdUnits">
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="control-label col-sm-2" for="lineItemAdUnits">開始時間</label>
-                                        <div class="col-sm-10">
-                                            <input type="text" class="form-control" ng-model="options.fromDate" max-date="{{ ng('options.toDate')}}" start-date="{{ ng('options.currentDateValue.toString()')}}" start-week="1" placeholder="From" bs-datepicker>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="control-label col-sm-2" for="lineItemAdUnits">結束時間</label>
-                                        <div class="col-sm-10">
-                                            <input type="text" class="form-control" ng-model="options.toDate" min-date="{{ ng('options.fromDate')}}" start-date="{{ ng('options.currentDateValue.toString()')}}" start-week="1" placeholder="To" bs-datepicker>
-                                        </div>
-                                    </div>
-
+                                </div>
+                                <div class="btn-group">
+                                    <button class="btn btn-default" type="button" ng-click="handleAddLineItem()">新增委刊項</button>
                                 </div>
                             </div>
 
@@ -63,7 +94,10 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" ng-click="$hide()">Close</button>
+                    <div class="btn-group">
+                        <button class="btn btn-default" type="submit" ng-click="handleSaveBooking()">Save Booking</button>
+                    </div>
+                    <!-- <button type="button" class="btn btn-default" ng-click="$hide()">Close</button> -->
                 </div>
             </div>
         </div>

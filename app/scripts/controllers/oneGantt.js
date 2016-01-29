@@ -176,7 +176,6 @@ angular.module('bhAdManager')
 
         // load data action
         $scope.load = function() {
-
             $log.info('Start one gantt load');
             $scope.data = [];
 
@@ -191,7 +190,6 @@ angular.module('bhAdManager')
                 };
                 $scope.data.push(newRow);
             }
-
         };
 
         $scope.reload = function() {

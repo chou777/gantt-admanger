@@ -60,7 +60,7 @@
                             <div class="panel-heading">
                                 <h4 class="panel-title clearfix">
                                    DFP 查詢系統
-                                   <button style="float:right;" class="btn btn-default clearfix"><span class="glyphicon glyphicon-time" aria-hidden="true"></span> 最後更新時間: {{ ng('options.updateTime') }}</button>
+                                   <button style="float:right;" class="btn btn-default clearfix"><span class="glyphicon glyphicon-time" aria-hidden="true"></span> 最後更新時間: {{ options.updateTime }}</button>
                                    <button style="float:right;" ng-click="handleUpdateDFP()" ng-disabled="updateLoading" class="btn btn-default clearfix">更新DFP資料(大約需3分鐘) </button>
                                 </h4>
                             </div>
@@ -91,10 +91,10 @@
                                                 <div class="form-group text-center">
                                                     <label class="control-label"><i class="fa fa-calendar"></i> <i class="fa fa-arrows-h"></i> <i class="fa fa-calendar"></i>   時間區間</label><br>
                                                     <div class="form-group">
-                                                        <input type="text" class="form-control" ng-model="options.fromDate" max-date="{{ ng('options.toDate')}}" start-date="{{ ng('options.currentDateValue.toString()')}}" start-week="1" placeholder="From" bs-datepicker>
+                                                        <input type="text" class="form-control" ng-model="options.fromDate" max-date="{{ options.toDate }}" start-date="{{ options.currentDateValue.toString() }}" start-week="1" placeholder="From" bs-datepicker>
                                                     </div>
                                                     <div class="form-group">
-                                                        <input type="text" class="form-control" ng-model="options.toDate" min-date="{{ ng('options.fromDate')}}" start-date="{{ ng('options.currentDateValue.toString()')}}" start-week="1" placeholder="To" bs-datepicker>
+                                                        <input type="text" class="form-control" ng-model="options.toDate" min-date="{{ options.fromDate }}" start-date="{{ options.currentDateValue.toString() }}" start-week="1" placeholder="To" bs-datepicker>
                                                     </div>
                                                 </div>
                                                 <div class="form-group text-center">
@@ -177,7 +177,7 @@
                     <div class="panel-group" bs-collapse>
                         <div class="panel panel-default">
                             <div class="panel-collapse" bs-collapse-target>
-                                <div class="panel-body" context-menu class="panel panel-default position-fixed" data-target="menu-{{ ng('$index') }}">
+                                <div class="panel-body" context-menu class="panel panel-default position-fixed" data-target="menu-{{ $index }}">
                                     <div gantt
                                          data="data"
                                          timespans="timespans"

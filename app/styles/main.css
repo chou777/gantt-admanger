@@ -210,3 +210,9 @@ textarea.live-row {
     position: absolute;
     top: 50%;
 }
+
+#bForm .error {
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
+}

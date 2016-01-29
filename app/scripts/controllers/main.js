@@ -69,11 +69,8 @@ angular.module('bhAdManager')
                 },
                 headersFormats: {
                     week: function(column) {
-                        return column.date.format('Do [-]') + column.endDate.format('Do') + column.date.format(' [(W]w[)]');
+                        return Math.ceil(column.date.format('D') / 7);
                     },
-                    // day: function(column) {
-                        // return column.date.format('D') + column.date.format('dd');
-                    // }
                 },
                 autoExpand: 'both',
                 taskOutOfRange: 'truncate',
@@ -89,7 +86,9 @@ angular.module('bhAdManager')
                 readOnly: true,
                 groupDisplayMode: 'Disabled',
                 filterTask: {
-                    name: ''
+                    name: '',
+                    orderName: '',
+                    order_id: ''
                 },
                 filterRow: '',
                 columnMagnet: '1 day',
@@ -124,13 +123,15 @@ angular.module('bhAdManager')
                                         if ($scope.selectedTask === undefined) {
                                             $scope.options.filterTask.name = directiveScope.task.model.orderName;
                                             $scope.options.filterTask = {
-                                                name: directiveScope.task.model.orderName,
+                                                orderName: directiveScope.task.model.orderName,
                                                 order_id: directiveScope.task.model.order_id
                                             }
                                             $scope.selectedTask = angular.copy(directiveScope.task.model);
                                         } else {
                                             $scope.options.filterTask = {
-                                                name: ''
+                                                name: '',
+                                                orderName: '',
+                                                order_id: ''
                                             };
                                             $scope.selectedTask = undefined;
                                         }
@@ -241,11 +242,13 @@ angular.module('bhAdManager')
                     if (data[i].tasks !== undefined) {
                         for (var j = (data[i].tasks.length - 1); j >= 0; j--) {
                             var taskClasses = [];
+
                             if (backgroundColor(data[i].tasks[j].color)) {
                                 taskClasses.push('isLight');
                             } else {
                                 taskClasses.push('isDark');
                             }
+                            // Add class is[Status].
                             if (data[i].tasks[j].status != undefined) {
                                 var status = data[i].tasks[j].status;
                                 status = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
@@ -403,12 +406,11 @@ angular.module('bhAdManager')
             }
 
             $scope.taskCancelSelected = function() {
-                $scope.options.filterTask = {name: ''};
+                $scope.options.filterTask = {name: '' , orderName: '', order_id: ''};
                 $scope.selectedTask = undefined;
             }
 
             $scope.writeFilterTask = function() {
-                $log.info($scope.options.filterTask);
                 $scope.options.filterTask = {
                     name: $scope.options.filterTask.name
                 }
@@ -416,20 +418,38 @@ angular.module('bhAdManager')
 
             $scope.handleBooking = function() {
                 $log.info('handleBooking');
-
-                var $modalScope = $scope.$new(true);
-
+                var $bookingFormScope = $scope.$new(true);
+                $bookingFormScope.ganttData = $scope.data;
+                $bookingFormScope.editOrderData = {};
                 $scope._bookingForm = $modal({
-                    scope: $modalScope,
+                    scope: $bookingFormScope,
                     title: '新增委刊單',
                     content: 'Prepare your gantt data, please wait one moment...',
                     templateUrl: '../scripts/views/bookingForm.tpl.html',
                     show: false,
                 });
-
                 $scope._bookingForm.$promise.then($scope._bookingForm.show);
-
-                // $scope.$digest();
             }
+            $rootScope.$on('addTasks', function(event, args) {
+                $log.info(args);
+                // Push New Tasks.
+                var taskDatas = args.taskDatas;
+                for (var i = 0; i < $scope.data.length; i++) {
+                     for (var j = 0; j < taskDatas.length; j++) {
+                         if (taskDatas[j].ad_unit_id === $scope.data[i].id) {
+                            // Change Tasks color.
+                            var taskClasses = [];
+                            taskClasses.push('isBooking');
+                            if (backgroundColor(taskDatas[j].color)) {
+                                taskClasses.push('isLight');
+                            } else {
+                                taskClasses.push('isDark');
+                            }
+                            taskDatas[j].classes = taskClasses;
+                            $scope.data[i].tasks.push(taskDatas[j]);
+                         }
+                     };
+                };
+            });
         }
     ]);
