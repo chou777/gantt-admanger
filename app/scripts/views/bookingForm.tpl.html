@@ -52,7 +52,7 @@
                                             <label class="control-label col-sm-2" for="{{ 'lineItemAdUnits' + $index }}">廣告單元</label>
                                             <div class="col-sm-10">
                                                 <select name="{{ 'lineItemAdUnits' + $index }}" class="form-control"  ng-model="lineItem.adUnits" required>
-                                                    <option ng-repeat="option in ganttData track by option.id " value="{{option.id}}">{{option.name}}</option>
+                                                    <option ng-repeat="option in ganttData track by option.id " value="{{option.id}}" ng-selected="option.id === lineItem.adUnits">{{option.name}}</option>
                                                 </select>
                                                 <div ng-show="bForm.$submitted || bForm['lineItemAdUnits'+ $index].$touched">
                                                     <div class="error" ng-show="bForm['lineItemAdUnits'+ $index].$error.required">填寫廣告單元</div>
@@ -94,9 +94,12 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <div class="btn-group">
-                        <button class="btn btn-default" type="submit" ng-click="handleSaveBooking()">Save Booking</button>
-                    </div>
+                <div class="form-actions">
+                    <button id="handle-delete-booking" ng-if="editOrderData" class="btn btn-danger" ng-click="handlePopoverConfirm('handleDeleteBooking', $event)"><i class="glyphicon glyphicon-trash"></i>Delete</button>
+                    <button class="btn btn-primary" type="submit" ng-click="handleSaveBooking()">Save Booking</button>
+                </div>
+
+
                     <!-- <button type="button" class="btn btn-default" ng-click="$hide()">Close</button> -->
                 </div>
             </div>

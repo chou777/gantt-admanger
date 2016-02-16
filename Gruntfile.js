@@ -27,11 +27,30 @@ module.exports = function (grunt) {
     // Project settings
     yeoman: appConfig,
 
+    html2js: {
+      options: {
+        quoteChar: '\'',
+        indentString: '    ',
+        module: 'admanager.templates',
+        singleModule: true,
+        useStrict: true,
+        fileHeaderString: '\'use strict\';'
+      },
+      core: {
+        src: ['<%= yeoman.app %>/scripts/views/{,*/}*.html'],
+        dest: '<%= yeoman.app %>/scripts/views/templates.js'
+      }
+    },
+
     // Watches files for changes and runs tasks based on the changed files
     watch: {
       bower: {
         files: ['bower.json'],
         tasks: ['wiredep']
+      },
+      html: {
+        files: ['<%= yeoman.app %>/scripts/views/{,*/}*.html'],
+        tasks: ['html2js']
       },
       js: {
         files: ['<%= yeoman.app %>/scripts/{,*/}*.js'],
@@ -392,6 +411,7 @@ module.exports = function (grunt) {
       'clean:server',
       'wiredep',
       'concurrent:server',
+      'html2js',
       'autoprefixer',
       'connect:livereload',
       'watch'
@@ -407,6 +427,7 @@ module.exports = function (grunt) {
     'clean:server',
     'wiredep:test',
     'concurrent:test',
+    'html2js',
     'autoprefixer',
     'connect:test',
     'karma'
@@ -417,6 +438,7 @@ module.exports = function (grunt) {
     'wiredep',
     'useminPrepare',
     'concurrent:dist',
+    'html2js',
     'autoprefixer',
     'concat',
     'ngAnnotate',
@@ -432,6 +454,7 @@ module.exports = function (grunt) {
   grunt.registerTask('default', [
     'newer:jshint',
     'test',
+    'html2js',
     'build'
   ]);
 };

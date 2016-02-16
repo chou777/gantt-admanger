@@ -163,21 +163,20 @@ textarea.live-row {
 .modal-backdrop.am-fade {
   opacity: .7;
   transition: opacity .15s linear;
-  &.ng-enter {
-    opacity: 0;
-    &.ng-enter-active {
-      opacity: .7;
-    }
-  }
-  &.ng-leave {
-    opacity: .7;
-    &.ng-leave-active {
-      opacity: 0;
-    }
-  }
+}
+.modal-backdrop.am-fade.ng-enter {
+  opacity: 0;
+}
+.modal-backdrop.am-fade.ng-enter.ng-enter-active {
+  opacity: .7;
+}
+.modal-backdrop.am-fade.ng-leave {
+  opacity: .7;
+}
+.modal-backdrop.am-fade.ng-leave.ng-leave-active {
+  opacity: 0;
 }
 
-/*one gantt*/
 
 #one-gantt .modal-dialog {
     width: 90%;
@@ -215,4 +214,17 @@ textarea.live-row {
     color: red;
     font-size: 12px;
     margin-top: 5px;
+}
+
+#change-color-form {
+    width: 400px;
+}
+
+/*popover position*/
+.popover.top {
+    margin-top: -45px;
+}
+
+:focus {
+    outline: 0;
 }

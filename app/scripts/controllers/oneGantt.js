@@ -44,6 +44,11 @@ angular.module('bhAdManager')
                 'from': '<i class="fa fa-calendar"></i> {{getHeader()}}',
                 'to': '<i class="fa fa-calendar"></i> {{getHeader()}}'
             },
+            headersFormats: {
+                week: function(column) {
+                    return Math.ceil(column.date.format('D') / 7);
+                },
+            },
             autoExpand: 'none',
             taskOutOfRange: 'truncate',
             fromDate: undefined,
@@ -87,6 +92,8 @@ angular.module('bhAdManager')
                         switch(directiveName) {
                             case 'ganttTask':
                                 element.on('click', function(event) {
+                                    $rootScope.$emit('filterOrderId', directiveScope.task.model);
+                                    $scope.$hide();
                                 });
                                 element.bind('mouseenter', function(event) {
                                     element.addClass('task-highlight');

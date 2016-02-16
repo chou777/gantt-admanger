@@ -33574,6 +33574,7 @@ angular.module('ngAnimate', ['ng'])
   });
   angular.module('mgcrea.ngStrap', [ 'mgcrea.ngStrap.modal', 'mgcrea.ngStrap.aside', 'mgcrea.ngStrap.alert', 'mgcrea.ngStrap.button', 'mgcrea.ngStrap.select', 'mgcrea.ngStrap.datepicker', 'mgcrea.ngStrap.timepicker', 'mgcrea.ngStrap.navbar', 'mgcrea.ngStrap.tooltip', 'mgcrea.ngStrap.popover', 'mgcrea.ngStrap.dropdown', 'mgcrea.ngStrap.typeahead', 'mgcrea.ngStrap.scrollspy', 'mgcrea.ngStrap.affix', 'mgcrea.ngStrap.tab', 'mgcrea.ngStrap.collapse' ]);
 })(window, document);
+
 /**
  * angular-strap
  * @version v2.3.7 - 2016-01-16
@@ -42489,8 +42490,8 @@ Github: https://github.com/angular-gantt/angular-gantt.git
                 } else {
                     this.$element.css({'left': this.left + 'px', 'width': this.width + 'px', 'display': ''});
 
-                    if (this.model.priority > 0) {
-                        this.$element.css('z-index', priority);
+                    if (this.model.priority |= undefined && this.model.priority > 0) {
+                        this.$element.css('z-index', this.model.priority);
                     }
 
                     this.$element.toggleClass('gantt-task-milestone', this.isMilestone());
@@ -44715,7 +44716,6 @@ angular.module('gantt.templates', []).run(['$templateCache', function($templateC
 }]);
 
 //# sourceMappingURL=angular-gantt.js.map
-
 /*
 Project: angular-gantt v1.2.11 - Gantt chart component for AngularJS
 Authors: Marco Schweighauser, Rémi Alvergnat
@@ -44778,6 +44778,65 @@ Github: https://github.com/angular-gantt/angular-gantt.git
     }]);
 }());
 
+
+(function(){
+    'use strict';
+    angular.module('gantt.contextmenus', ['gantt']).directive('ganttContextMenus', ['$compile', '$document', function($compile, $document) {
+        return {
+            restrict: 'E',
+            require: '^gantt',
+            scope: {
+                enabled: '=?',
+                taskOptions: '=?',
+                rowLabelOptions: '=?',
+
+            },
+            link: function(scope, element, attrs, ganttCtrl) {
+                var api = ganttCtrl.gantt.api;
+
+                // Default true
+                if (scope.enabled === undefined) {
+                    scope.enabled = true;
+                }
+                scope.api = api;
+
+                api.directives.on.new(scope, function(directiveName, directiveScope, element) {
+                    if (directiveName === 'ganttRowLabel' && scope.rowLabelOptions !== undefined) {
+                        if (element.hasClass('gantt-row-label') && element.hasClass('gantt-row-height')) {
+                            if (!element.hasClass('context-menu-enabled')){
+                                element.addClass('context-menu-enabled');
+                                var contextmenuScope = directiveScope.$new();
+                                contextmenuScope.directiveName = directiveName;
+                                contextmenuScope.menuList = scope.rowLabelOptions;
+                                contextmenuScope.pluginScope = scope;
+                                var ifElement = $document[0].createElement('div');
+                                angular.element(ifElement).attr('data-ng-if', 'pluginScope.enabled');
+                                var contextmenuElement = $document[0].createElement('gantt-context-menu');
+                                angular.element(ifElement).append(contextmenuElement);
+                                element.append($compile(ifElement)(contextmenuScope));
+                            }
+                        }
+                    }
+
+                    if (directiveName === 'ganttTask' && scope.taskOptions !== undefined) {
+                        if (!element.hasClass('context-menu-enabled')){
+                            element.addClass('context-menu-enabled');
+                            var contextmenuScope = directiveScope.$new();
+                            contextmenuScope.pluginScope = scope;
+                            contextmenuScope.directiveName = directiveName;
+                            contextmenuScope.menuList =  scope.taskOptions;
+                            var ifElement = $document[0].createElement('div');
+                            angular.element(ifElement).attr('data-ng-if', 'pluginScope.enabled');
+                            var contextmenuElement = $document[0].createElement('gantt-context-menu');
+                            angular.element(ifElement).append(contextmenuElement);
+                            element.append($compile(ifElement)(contextmenuScope));
+                        }
+                    }
+                });
+            }
+        };
+    }]);
+}());
 
 (function() {
     'use strict';
@@ -46242,6 +46301,188 @@ Github: https://github.com/angular-gantt/angular-gantt.git
 
 (function() {
     'use strict';
+    angular.module('gantt.contextmenus').directive('ganttContextMenu', ['$timeout', function($timeout) {
+        // This contextmenu displays more information about a task || rowLabel
+        return {
+            restrict: 'EA',
+            scope: true,
+            replace: true,
+            controller: ['$scope', '$element', 'ganttUtils', '$q', function($scope, $element, utils, $q) {
+                var contextMenus = [];
+                var $currentContextMenu = null;
+                var directiveName = $scope.directiveName;
+                var madel = null;
+                var menuList = $scope.menuList;
+
+                if (directiveName === 'ganttTask') {
+                    madel = $scope.task.model;
+                    $scope.task.getContentElement().bind('contextmenu', function(event) {
+                        event.stopPropagation();
+                        $scope.$apply(function () {
+                            event.preventDefault();
+                            if (menuList instanceof Array) {
+                                if (menuList.length === 0) { return; }
+                                renderContextMenu($scope, event, menuList, madel);
+                            } else {
+                                throw '"' + menuList + '" not an array';
+                            }
+                        });
+                    });
+                }
+
+                if (directiveName === 'ganttRowLabel') {
+                    madel = $scope.row.model;
+                    $element.parent().parent('.context-menu-enabled').bind('contextmenu', function(event) {
+                        event.stopPropagation();
+                        $scope.$apply(function () {
+                            event.preventDefault();
+                            if (menuList instanceof Array) {
+                                if (menuList.length === 0) { return; }
+                                renderContextMenu($scope, event, menuList, madel);
+                            } else {
+                                throw '"' + menuList + '" not an array';
+                            }
+                        });
+                    });
+                }
+
+                var removeContextMenus = function (level) {
+                    while (contextMenus.length && (!level || contextMenus.length > level)) {
+                        contextMenus.pop().remove();
+                    }
+                    if (contextMenus.length === 0 && $currentContextMenu) {
+                        $currentContextMenu.remove();
+                    }
+                };
+
+                var renderContextMenu = function ($scope, event, options, model, level) {
+                    if (!level) { level = 0; }
+                    if (!$) { var $ = angular.element; }
+                    $(event.currentTarget).addClass('context');
+                    var $contextMenu = $('<div>');
+                    if ($currentContextMenu) {
+                        $contextMenu = $currentContextMenu;
+                    } else {
+                        $currentContextMenu = $contextMenu;
+                    }
+                    $contextMenu.addClass('dropdown clearfix');
+                    var $ul = $('<ul>');
+                    $ul.addClass('dropdown-menu');
+                    $ul.attr({ 'role': 'menu' });
+                    $ul.css({
+                        display: 'block',
+                        position: 'absolute',
+                        left: event.pageX + 'px',
+                        top: event.pageY + 'px',
+                        "z-index": 10000
+                    });
+
+                    angular.forEach(options, function (item, i) {
+                        var $li = $('<li>');
+                        if (item === null) {
+                            $li.addClass('divider');
+                        } else {
+                            var nestedMenu = angular.isArray(item[1]) ? item[1] : angular.isArray(item[2])? item[2] : angular.isArray(item[3]) ? item[3] : null;
+                            var $a = $('<a>');
+                            $a.css("padding-right", "8px");
+                            $a.attr({ tabindex: '-1', href: '#' });
+                            var text = typeof item[0] === 'string' ? item[0] : item[0].call($scope, $scope, event, model);
+                            $q.when(text).then(function (text) {
+                                $a.text(text);
+                                if (nestedMenu) {
+                                    $a.css("cursor", "default");
+                                    $a.append($('<strong style="font-family:monospace;font-weight:bold;float:right;">&gt;</strong>'));
+                                }
+                            });
+                            $li.append($a);
+
+                            var enabled = angular.isFunction(item[2]) ? item[2].call($scope, $scope, event, model, text) : true;
+                            if (enabled) {
+                                var openNestedMenu = function ($event) {
+                                    removeContextMenus(level + 1);
+                                    var ev = {
+                                        pageX: event.pageX + $ul[0].offsetWidth - 1,
+                                        pageY: $ul[0].offsetTop + $li[0].offsetTop - 3
+                                    };
+                                    renderContextMenu($scope, ev, nestedMenu, model, level + 1);
+                                }
+                                $li.on('click', function ($event) {
+                                    $event.preventDefault();
+                                    $scope.$apply(function () {
+                                        if (nestedMenu) {
+                                            openNestedMenu($event);
+                                        } else {
+                                            $(event.currentTarget).removeClass('context');
+                                            removeContextMenus();
+                                            item[1].call($scope, $scope, event, model, text);
+                                        }
+                                    });
+                                });
+
+                                $li.on('mouseover', function ($event) {
+                                    $scope.$apply(function () {
+                                        if (nestedMenu) {
+                                            openNestedMenu($event);
+                                        }
+                                    });
+                                });
+                            } else {
+                                $li.on('click', function ($event) {
+                                    $event.preventDefault();
+                                });
+                                $li.addClass('disabled');
+                            }
+                        }
+                        $ul.append($li);
+                    });
+
+                    $contextMenu.append($ul);
+                    var height = Math.max(
+                        document.body.scrollHeight, document.documentElement.scrollHeight,
+                        document.body.offsetHeight, document.documentElement.offsetHeight,
+                        document.body.clientHeight, document.documentElement.clientHeight
+                    );
+
+                    $contextMenu.css({
+                        width: '100%',
+                        height: height + 'px',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        zIndex: 9999
+                    });
+                    $(document).find('body').append($contextMenu);
+                    $contextMenu.on("mousedown", function (e) {
+                        if ($(e.target).hasClass('dropdown')) {
+                            $(event.currentTarget).removeClass('context');
+                            removeContextMenus();
+                        }
+                    }).on('contextmenu', function (event) {
+                        $(event.currentTarget).removeClass('context');
+                        event.preventDefault();
+                        removeContextMenus(level);
+                    });
+                    $scope.$on('$destroy', function () {
+                        removeContextMenus();
+                    });
+
+                    contextMenus.push($ul);
+                };
+
+
+                $scope.gantt.api.directives.raise.new('ganttContextMenu', $scope, $element);
+                $scope.$on('$destroy', function() {
+                    $scope.gantt.api.directives.raise.destroy('ganttContextMenu', $scope, $element);
+                });
+
+
+            }]
+        };
+    }]);
+}());
+
+(function() {
+    'use strict';
 
     angular.module('gantt.dependencies').factory('GanttDependenciesEvents', [function() {
         /**
@@ -47583,7 +47824,6 @@ Github: https://github.com/angular-gantt/angular-gantt.git
                 var showTooltip = function(x) {
                     visible = true;
                     mouseMoveHandler.bind();
-
                     $scope.displayed = true;
 
                     $scope.$evalAsync(function() {
@@ -47980,6 +48220,20 @@ Github: https://github.com/angular-gantt/angular-gantt.git
 angular.module('gantt.bounds.templates', []).run(['$templateCache', function($templateCache) {
     $templateCache.put('plugins/bounds/taskBounds.tmpl.html',
         '<div ng-cloak class="gantt-task-bounds" ng-style="getCss()" ng-class="getClass()"></div>\n' +
+        '');
+}]);
+
+angular.module('gantt.contextmenus.templates', []).run(['$templateCache', function($templateCache) {
+    $templateCache.put('plugins/contextmenus/contextmenu.tmpl.html',
+        '<div ng-cloak\n' +
+        '     class="gantt-task-info"\n' +
+        '     ng-show="displayed"\n' +
+        '     ng-class="isRightAligned ? \'gantt-task-infoArrowR\' : \'gantt-task-infoArrow\'"\n' +
+        '     ng-style="{top: taskRect.top + \'px\', marginTop: -elementHeight - 8 + \'px\'}">\n' +
+        '    <div class="gantt-task-info-content">\n' +
+        '        <div gantt-bind-compile-html="pluginScope.content"></div>\n' +
+        '    </div>\n' +
+        '</div>\n' +
         '');
 }]);
 
@@ -48573,6 +48827,13 @@ return DateRange;
  */
 ;
 (function() {
+
+    var ResizeSensor = window.ResizeSensor;
+
+    if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
+        ResizeSensor = require('./ResizeSensor');
+    }
+
     /**
      *
      * @type {Function}
@@ -48580,7 +48841,7 @@ return DateRange;
      */
     var ElementQueries = this.ElementQueries = function() {
 
-        this.withTracking = false;
+        var trackingActive = false;
         var elements = [];
 
         /**
@@ -48691,6 +48952,8 @@ return DateRange;
                 }
 
                 for (var k in attributes) {
+                    if(!attributes.hasOwnProperty(k)) continue;
+
                     if (attrValues[attributes[k]]) {
                         this.element.setAttribute(attributes[k], attrValues[attributes[k]].substr(1));
                     } else {
@@ -48716,7 +48979,7 @@ return DateRange;
             }
             element.elementQueriesSetupInformation.call();
 
-            if (this.withTracking) {
+            if (trackingActive && elements.indexOf(element) < 0) {
                 elements.push(element);
             }
         }
@@ -48727,7 +48990,15 @@ return DateRange;
          * @param {String} property width|height
          * @param {String} value
          */
+        var allQueries = {};
         function queueQuery(selector, mode, property, value) {
+            if (typeof(allQueries[mode]) == 'undefined') allQueries[mode] = {};
+            if (typeof(allQueries[mode][property]) == 'undefined') allQueries[mode][property] = {};
+            if (typeof(allQueries[mode][property][value]) == 'undefined') allQueries[mode][property][value] = selector;
+            else allQueries[mode][property][value] += ','+selector;
+        }
+
+        function getQuery() {
             var query;
             if (document.querySelectorAll) query = document.querySelectorAll.bind(document);
             if (!query && 'undefined' !== typeof $$) query = $$;
@@ -48737,27 +49008,155 @@ return DateRange;
                 throw 'No document.querySelectorAll, jQuery or Mootools\'s $$ found.';
             }
 
-            var elements = query(selector);
-            for (var i = 0, j = elements.length; i < j; i++) {
-                setupElement(elements[i], {
-                    mode: mode,
-                    property: property,
-                    value: value
-                });
+            return query;
+        }
+
+        /**
+         * Start the magic. Go through all collected rules (readRules()) and attach the resize-listener.
+         */
+        function findElementQueriesElements() {
+            var query = getQuery();
+
+            for (var mode in allQueries) if (allQueries.hasOwnProperty(mode)) {
+
+                for (var property in allQueries[mode]) if (allQueries[mode].hasOwnProperty(property)) {
+                    for (var value in allQueries[mode][property]) if (allQueries[mode][property].hasOwnProperty(value)) {
+                        var elements = query(allQueries[mode][property][value]);
+                        for (var i = 0, j = elements.length; i < j; i++) {
+                            setupElement(elements[i], {
+                                mode: mode,
+                                property: property,
+                                value: value
+                            });
+                        }
+                    }
+                }
+
             }
         }
 
-        var regex = /,?([^,\n]*)\[[\s\t]*(min|max)-(width|height)[\s\t]*[~$\^]?=[\s\t]*"([^"]*)"[\s\t]*]([^\n\s\{]*)/mgi;
+        /**
+         *
+         * @param {HTMLElement} element
+         */
+        function attachResponsiveImage(element) {
+            var children = [];
+            var rules = [];
+            var sources = [];
+            var defaultImageId = 0;
+            var lastActiveImage = -1;
+            var loadedImages = [];
 
+            for (var i in element.children) {
+                if(!element.children.hasOwnProperty(i)) continue;
+
+                if (element.children[i].tagName && element.children[i].tagName.toLowerCase() === 'img') {
+                    children.push(element.children[i]);
+
+                    var minWidth = element.children[i].getAttribute('min-width') || element.children[i].getAttribute('data-min-width');
+                    //var minHeight = element.children[i].getAttribute('min-height') || element.children[i].getAttribute('data-min-height');
+                    var src = element.children[i].getAttribute('data-src') || element.children[i].getAttribute('url');
+
+                    sources.push(src);
+
+                    var rule = {
+                        minWidth: minWidth
+                    };
+
+                    rules.push(rule);
+
+                    if (!minWidth) {
+                        defaultImageId = children.length - 1;
+                        element.children[i].style.display = 'block';
+                    } else {
+                        element.children[i].style.display = 'none';
+                    }
+                }
+            }
+
+            lastActiveImage = defaultImageId;
+
+            function check() {
+                var imageToDisplay = false, i;
+
+                for (i in children){
+                    if(!children.hasOwnProperty(i)) continue;
+
+                    if (rules[i].minWidth) {
+                        if (element.offsetWidth > rules[i].minWidth) {
+                            imageToDisplay = i;
+                        }
+                    }
+                }
+
+                if (!imageToDisplay) {
+                    //no rule matched, show default
+                    imageToDisplay = defaultImageId;
+                }
+
+                if (lastActiveImage != imageToDisplay) {
+                    //image change
+
+                    if (!loadedImages[imageToDisplay]){
+                        //image has not been loaded yet, we need to load the image first in memory to prevent flash of
+                        //no content
+
+                        var image = new Image();
+                        image.onload = function() {
+                            children[imageToDisplay].src = sources[imageToDisplay];
+
+                            children[lastActiveImage].style.display = 'none';
+                            children[imageToDisplay].style.display = 'block';
+
+                            loadedImages[imageToDisplay] = true;
+
+                            lastActiveImage = imageToDisplay;
+                        };
+
+                        image.src = sources[imageToDisplay];
+                    } else {
+                        children[lastActiveImage].style.display = 'none';
+                        children[imageToDisplay].style.display = 'block';
+                        lastActiveImage = imageToDisplay;
+                    }
+                } else {
+                    //make sure for initial check call the .src is set correctly
+                    children[imageToDisplay].src = sources[imageToDisplay];
+                }
+            }
+
+            element.resizeSensor = new ResizeSensor(element, check);
+            check();
+
+            if (trackingActive) {
+                elements.push(element);
+            }
+        }
+
+        function findResponsiveImages(){
+            var query = getQuery();
+
+            var elements = query('[data-responsive-image],[responsive-image]');
+            for (var i = 0, j = elements.length; i < j; i++) {
+                attachResponsiveImage(elements[i]);
+            }
+        }
+
+        var regex = /,?[\s\t]*([^,\n]*?)((?:\[[\s\t]*?(?:min|max)-(?:width|height)[\s\t]*?[~$\^]?=[\s\t]*?"[^"]*?"[\s\t]*?])+)([^,\n\s\{]*)/mgi;
+        var attrRegex = /\[[\s\t]*?(min|max)-(width|height)[\s\t]*?[~$\^]?=[\s\t]*?"([^"]*?)"[\s\t]*?]/mgi;
         /**
          * @param {String} css
          */
         function extractQuery(css) {
             var match;
+            var smatch;
             css = css.replace(/'/g, '"');
             while (null !== (match = regex.exec(css))) {
-                if (5 < match.length) {
-                    queueQuery(match[1] || match[5], match[2], match[3], match[4]);
+                smatch = match[1] + match[3];
+                attrs = match[2];
+
+                while (null !== (attrMatch = attrRegex.exec(attrs))) {
+                    queueQuery(smatch, attrMatch[1], attrMatch[2], attrMatch[3]);
                 }
             }
         }
@@ -48791,6 +49190,8 @@ return DateRange;
             }
         }
 
+        var defaultCssInjected = false;
+
         /**
          * Searches all css rules and setups the event listener to all elements with element query rules..
          *
@@ -48798,16 +49199,28 @@ return DateRange;
          *                               (no garbage collection possible if you don not call .detach() first)
          */
         this.init = function(withTracking) {
-            this.withTracking = withTracking;
+            trackingActive = typeof withTracking === 'undefined' ? false : withTracking;
+
             for (var i = 0, j = document.styleSheets.length; i < j; i++) {
                 try {
-                    readRules(document.styleSheets[i].cssText || document.styleSheets[i].cssRules || document.styleSheets[i].rules);
+                    readRules(document.styleSheets[i].cssRules || document.styleSheets[i].rules || document.styleSheets[i].cssText);
                 } catch(e) {
                     if (e.name !== 'SecurityError') {
                         throw e;
                     }
                 }
             }
+
+            if (!defaultCssInjected) {
+                var style = document.createElement('style');
+                style.type = 'text/css';
+                style.innerHTML = '[responsive-image] > img, [data-responsive-image] {overflow: hidden; padding: 0; } [responsive-image] > img, [data-responsive-image] > img { width: 100%;}';
+                document.getElementsByTagName('head')[0].appendChild(style);
+                defaultCssInjected = true;
+            }
+
+            findElementQueriesElements();
+            findResponsiveImages();
         };
 
         /**
@@ -48816,14 +49229,13 @@ return DateRange;
          *                               (no garbage collection possible if you don not call .detach() first)
          */
         this.update = function(withTracking) {
-            this.withTracking = withTracking;
-            this.init();
+            this.init(withTracking);
         };
 
         this.detach = function() {
             if (!this.withTracking) {
                 throw 'withTracking is not enabled. We can not detach elements since we don not store it.' +
-                'Use ElementQueries.withTracking = true; before domready.';
+                'Use ElementQueries.withTracking = true; before domready or call ElementQueryes.update(true).';
             }
 
             var element;
@@ -48851,12 +49263,18 @@ return DateRange;
      */
     ElementQueries.detach = function(element) {
         if (element.elementQueriesSetupInformation) {
+            //element queries
             element.elementQueriesSensor.detach();
             delete element.elementQueriesSetupInformation;
             delete element.elementQueriesSensor;
-            console.log('detached');
+
+        } else if (element.resizeSensor) {
+            //responsive image
+
+            element.resizeSensor.detach();
+            delete element.resizeSensor;
         } else {
-            console.log('detached already', element);
+            //console.log('detached already', element);
         }
     };
 
@@ -48873,20 +49291,20 @@ return DateRange;
     var domLoaded = function (callback) {
         /* Internet Explorer */
         /*@cc_on
-        @if (@_win32 || @_win64)
-            document.write('<script id="ieScriptLoad" defer src="//:"><\/script>');
-            document.getElementById('ieScriptLoad').onreadystatechange = function() {
-                if (this.readyState == 'complete') {
-                    callback();
-                }
-            };
-        @end @*/
+         @if (@_win32 || @_win64)
+         document.write('<script id="ieScriptLoad" defer src="//:"><\/script>');
+         document.getElementById('ieScriptLoad').onreadystatechange = function() {
+         if (this.readyState == 'complete') {
+         callback();
+         }
+         };
+         @end @*/
         /* Mozilla, Chrome, Opera */
         if (document.addEventListener) {
             document.addEventListener('DOMContentLoaded', callback, false);
         }
         /* Safari, iCab, Konqueror */
-        if (/KHTML|WebKit|iCab/i.test(navigator.userAgent)) {
+        else if (/KHTML|WebKit|iCab/i.test(navigator.userAgent)) {
             var DOMLoadTimer = setInterval(function () {
                 if (/loaded|complete/i.test(document.readyState)) {
                     callback();
@@ -48895,18 +49313,22 @@ return DateRange;
             }, 10);
         }
         /* Other web browsers */
-        window.onload = callback;
+        else window.onload = callback;
     };
 
-    if (window.addEventListener) {
-        window.addEventListener('load', ElementQueries.init, false);
-    } else {
-        window.attachEvent('onload', ElementQueries.init);
+    ElementQueries.listen = function() {
+        domLoaded(ElementQueries.init);
+    };
+
+    // make available to common module loader
+    if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
+        module.exports = ElementQueries;
     }
-    domLoaded(ElementQueries.init);
-
+    else {
+        window.ElementQueries = ElementQueries;
+        ElementQueries.listen();
+    }
 })();
-
 /**
  * Copyright Marc J. Schmidt. See the LICENSE file at the top-level
  * directory of this distribution and at
@@ -48923,7 +49345,7 @@ return DateRange;
      *
      * @constructor
      */
-    this.ResizeSensor = function(element, callback) {
+    var ResizeSensor = function(element, callback) {
         /**
          *
          * @constructor
@@ -48973,8 +49395,8 @@ return DateRange;
 
             element.resizeSensor = document.createElement('div');
             element.resizeSensor.className = 'resize-sensor';
-            var style = 'position: absolute; left: 0; top: 0; right: 0; bottom: 0; overflow: scroll; z-index: -1; visibility: hidden;';
-            var styleChild = 'position: absolute; left: 0; top: 0;';
+            var style = 'position: absolute; left: 0; top: 0; right: 0; bottom: 0; overflow: hidden; z-index: -1; visibility: hidden;';
+            var styleChild = 'position: absolute; left: 0; top: 0; transition: 0s;';
 
             element.resizeSensor.style.cssText = style;
             element.resizeSensor.innerHTML =
@@ -49024,25 +49446,26 @@ return DateRange;
                 }
             };
 
-            addEvent(expand, 'scroll', function() {
-                if (element.offsetWidth > lastWidth || element.offsetHeight > lastHeight) {
-                    changed();
-                }
-                reset();
-            });
+            var onScroll = function() {
+              if (element.offsetWidth != lastWidth || element.offsetHeight != lastHeight) {
+                  changed();
+              }
+              reset();
+            };
 
-            addEvent(shrink, 'scroll',function() {
-                if (element.offsetWidth < lastWidth || element.offsetHeight < lastHeight) {
-                    changed();
-                }
-                reset();
-            });
+            addEvent(expand, 'scroll', onScroll);
+            addEvent(shrink, 'scroll', onScroll);
         }
 
-        if ("[object Array]" === Object.prototype.toString.call(element)
+        var elementType = Object.prototype.toString.call(element);
+        var isCollectionTyped = ('[object Array]' === elementType
+            || ('[object NodeList]' === elementType)
+            || ('[object HTMLCollection]' === elementType)
             || ('undefined' !== typeof jQuery && element instanceof jQuery) //jquery
             || ('undefined' !== typeof Elements && element instanceof Elements) //mootools
-            ) {
+        );
+
+        if (isCollectionTyped) {
             var i = 0, j = element.length;
             for (; i < j; i++) {
                 attachResizeEvent(element[i], callback);
@@ -49052,11 +49475,18 @@ return DateRange;
         }
 
         this.detach = function() {
-            ResizeSensor.detach(element);
+            if (isCollectionTyped) {
+                var i = 0, j = element.length;
+                for (; i < j; i++) {
+                    ResizeSensor.detach(element[i]);
+                }
+            } else {
+                ResizeSensor.detach(element);
+            }
         };
     };
 
-    this.ResizeSensor.detach = function(element) {
+    ResizeSensor.detach = function(element) {
         if (element.resizeSensor) {
             element.removeChild(element.resizeSensor);
             delete element.resizeSensor;
@@ -49064,7 +49494,16 @@ return DateRange;
         }
     };
 
+    // make available to common module loader
+    if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
+        module.exports = ResizeSensor;
+    }
+    else {
+        window.ResizeSensor = ResizeSensor;
+    }
+
 })();
+
 /**
  * jsBezier-0.7
  *
@@ -52716,6 +53155,11 @@ return DateRange;
                     }
                 }
 
+                // scope
+                if (_p.sourceEndpoint && _p.sourceEndpoint.scope) {
+                    _p.scope = _p.sourceEndpoint.scope;
+                }
+
                 // pointer events
                 if (!_p["pointer-events"] && _p.sourceEndpoint && _p.sourceEndpoint.connectorPointerEvents)
                     _p["pointer-events"] = _p.sourceEndpoint.connectorPointerEvents;
@@ -56324,6 +56768,7 @@ return DateRange;
                             type: this.connectionType,
                             cssClass: this.connectorClass,
                             hoverClass: this.connectorHoverClass,
+                            scope:params.scope,
                             data:beforeDrag
                         });
                         jpc.pending = true;
@@ -56484,6 +56929,10 @@ return DateRange;
 
                         // although the connection is no longer valid, there are use cases where this is useful.
                         _jsPlumb.fire("connectionDragStop", jpc, originalEvent);
+                        // fire this event to give people more fine-grained control (connectionDragStop fires a lot)
+                        if (jpc.pending) {
+                            _jsPlumb.fire("connectionAborted", jpc, originalEvent);
+                        }
                         // tell jsplumb that dragging is finished.
                         _jsPlumb.currentlyDragging = false;
                         jpc = null;

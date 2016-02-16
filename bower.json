@@ -22,7 +22,9 @@
     "moment-range": "~2.0.3",
     "css-element-queries": "~0.3.0",
     "jsPlumb": "~2.0.5",
-    "angular-bootstrap-colorpicker": "~2.0"
+    "angular-bootstrap-colorpicker": "~2.0",
+    "bootstrap-additions": "~0.3.1",
+    "angular-motion": "~0.4.3"
   },
   "overrides": {
     "bootstrap": {

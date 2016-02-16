@@ -10,12 +10,14 @@
 const environment = "TEST";
 
 angular.module('bhAdManager')
-    .controller('MainCtrl', ['$scope', '$timeout', '$log', 'ganttUtils', 'GanttObjectModel', 'Sample', 'ganttMouseOffset', 'ganttDebounce', 'moment', '$modal', '$popover', '$http', '$sce', '$alert', '$rootScope',
-        function($scope, $timeout, $log, utils, ObjectModel, Sample, mouseOffset, debounce, moment, $modal, $popover, $http, $sce, $alert, $rootScope) {
+    .controller('MainCtrl', ['$scope', '$timeout', '$log', 'ganttUtils', 'GanttObjectModel', 'Sample', 'ganttMouseOffset', 'ganttDebounce', 'moment', '$modal', '$popover', '$http', '$sce', '$alert', '$rootScope', '$aside',
+        function($scope, $timeout, $log, utils, ObjectModel, Sample, mouseOffset, debounce, moment, $modal, $popover, $http, $sce, $alert, $rootScope, $aside) {
             var objectModel;
             var dataToRemove;
 
             $scope.selectedTask = undefined;
+            var changeColorAside = $aside({scope: $scope, title: "編輯委刊單顏色", templateUrl: '../app/scripts/views/changeColorForm.tpl.html', show: false, backdrop: "static"});
+
 
             $scope.options = {
                 updateTime: undefined,
@@ -24,7 +26,7 @@ angular.module('bhAdManager')
                 scale: 'day',
                 sortMode: undefined,
                 isLoading: false,
-                sideMode: 'Tree',
+                sideMode: 'Table',
                 daily: true,
                 maxHeight: false,
                 width: true,
@@ -50,18 +52,29 @@ angular.module('bhAdManager')
                 },
                 contextMenuOptions:{
                     'task':
-                        [['task modal', function ($itemScope, $event, model) {
-                            console.log(model);
+                        [['更新booking資料', function ($itemScope, $event, model) {
+                            $scope.handleBooking(model);
+                        },function ($itemScope, $event, model) {
+                            if (model.status === 'BOOKING') {
+                                return true;
+                            }else {
+                                return false;
+                            }
                         }],
-                        ['Alert some value', function ($itemScope, $event, model) {
-                            alert('Alert some value');
-                        }],
-                        ['Reload Data', function ($itemScope, $event, model) {
-                            $scope.reload();
-                        }],
-                        ['Clear Data', function ($itemScope, $event, model) {
-                            $scope.clear();
-                        }]],
+                        ['編輯背景色', function ($itemScope, $event, model) {
+                            $scope.changeColorModel = angular.copy(model);
+                            changeColorAside.$promise.then(function() {
+                                changeColorAside.show();
+                            });
+                        }]
+                        ],
+                    // 'rowLabel':
+                    //     [['row model', function ($itemScope, $event, model) {
+                    //         console.log(model);
+                    //     }],
+                    //     ['Clear Data', function ($itemScope, $event, model) {
+                    //         $scope.clear();
+                    //     }]],
                 },
                 treeHeaderContent: '<i class="fa fa-align-justify"></i> 廣告單元',
                 columnsHeaderContents: {
@@ -77,7 +90,8 @@ angular.module('bhAdManager')
                 fromDate: undefined,
                 toDate: undefined,
                 rowContent: '<i class="fa fa-align-justify"></i> {{row.model.name}}',
-                taskContent: '<i class="fa fa-tasks"></i> {{task.model.name}}',
+                taskContentEnabled: true,
+                taskContent: '{{ task.model.orderName}} - {{task.model.lineItemName}} - {{ task.model.status}}',
                 allowSideResizing: true,
                 labelsEnabled: true,
                 currentDate: 'none',
@@ -87,10 +101,24 @@ angular.module('bhAdManager')
                 groupDisplayMode: 'Disabled',
                 filterTask: {
                     name: '',
-                    orderName: '',
-                    order_id: ''
+                    orderId: '',
+                    status: ''
                 },
                 filterRow: '',
+                filterTaskStatusOptions: [
+                    {name: '延長放送' , key: 'DELIVERY_EXTENDED'},
+                    {name: '放送中' , key: 'DELIVERING'},
+                    {name: '準備中' , key: 'READY'},
+                    {name: '暫停' , key: 'PAUSED'},
+                    {name: '缺素材or禁用' , key: 'INACTIVE'},
+                    {name: '暫停廣告資源' , key: 'PAUSED_INVENTORY_RELEASED'},
+                    {name: '待審核' , key: 'PENDING_APPROVAL'},
+                    {name: '放送完成' , key: 'COMPLETED'},
+                    {name: '不合格' , key: 'DISAPPROVED'},
+                    {name: '草稿' , key: 'DRAFT'},
+                    {name: '取消' , key: 'CANCELED'},
+                    {name: 'BOOKING' , key: 'BOOKING'},
+                ],
                 columnMagnet: '1 day',
                 api: function(api) {
                     // API Object is used to control methods and events from angular-gantt.
@@ -121,35 +149,20 @@ angular.module('bhAdManager')
                                 case 'ganttTask':
                                     element.on('click', function(event) {
                                         if ($scope.selectedTask === undefined) {
-                                            $scope.options.filterTask.name = directiveScope.task.model.orderName;
-                                            $scope.options.filterTask = {
-                                                orderName: directiveScope.task.model.orderName,
-                                                order_id: directiveScope.task.model.order_id
-                                            }
-                                            $scope.selectedTask = angular.copy(directiveScope.task.model);
+                                            $scope.options.filterTask.orderId = directiveScope.task.model.orderId;
+                                            $scope.selectedTask = directiveScope.task.model;
                                         } else {
-                                            $scope.options.filterTask = {
-                                                name: '',
-                                                orderName: '',
-                                                order_id: ''
-                                            };
-                                            $scope.selectedTask = undefined;
+                                            // $scope.options.filterTask.orderId = '';
+                                            // $scope.selectedTask = directiveScope.task.model;
                                         }
                                         $scope.$digest();
-
                                     });
+
                                     element.bind('mouseenter', function(event) {
                                         element.addClass('task-highlight');
                                     });
                                     element.bind('mouseleave', function(event) {
                                         element.removeClass('task-highlight');
-                                    });
-                                    element.on('contextmenu', function(event) {
-                                        event.stopPropagation();
-                                        event.preventDefault();
-
-                                        $log.info('Task Right Click');
-                                        $scope.$digest();
                                     });
                                     break;
                                 case 'ganttRow':
@@ -164,7 +177,7 @@ angular.module('bhAdManager')
                                     });
                                     break;
                                 case 'ganttRowLabel':
-                                    element.bind('mousedown touchstart', function(event) {
+                                    element.bind('click', function(event) {
                                         var dateRange = api.columns.getDateRange(true)
                                         var adUnitOne = {
                                             row: directiveScope.row.model,
@@ -178,7 +191,7 @@ angular.module('bhAdManager')
                                             scope: $modalScope,
                                             title: directiveScope.row.model.name,
                                             content: 'Prepare your gantt data, please wait one moment...',
-                                            templateUrl: '../scripts/views/oneGantt.tpl.html',
+                                            templateUrl: '../app/scripts/views/oneGantt.tpl.html',
                                             show: false
                                         });
 
@@ -274,7 +287,7 @@ angular.module('bhAdManager')
                 var U = R * -0.168736 + G * -0.331264 + B * 0.500000 + 128; // determines the chrominance of the color
                 var V = R * 0.500000 + G * -0.418688 + B * -0.081312 + 128; // determines the chroma of the color
                 return Y <= 149;
-            }
+            };
 
             // load data action
             $scope.load = function() {
@@ -312,7 +325,7 @@ angular.module('bhAdManager')
             $scope.resetDate = function() {
                 $scope.options.fromDate = undefined;
                 $scope.options.toDate = undefined;
-            }
+            };
 
             $scope.handleUpdateDFP = function() {
                 $log.info('handleUpdateDFP');
@@ -338,12 +351,15 @@ angular.module('bhAdManager')
                         alert('Update Data Error');
                     });
                 }
-            }
+            };
+
             $scope.taskSaveColor = function() {
                 $scope.options.isLoading = true;
                 if (environment === 'TEST') {
-                    changeColor($scope.selectedTask.order_id, $scope.selectedTask.color);
+                    changeColor($scope.changeColorModel.orderId, $scope.changeColorModel.color);
                     $scope.options.isLoading = false;
+                    $scope.changeColorModel = undefined;
+
                     $alert({
                         title: 'Success!',
                         content: '顏色更新成功',
@@ -351,15 +367,18 @@ angular.module('bhAdManager')
                         keyboard: true,
                         show: true
                     });
+                    changeColorAside.hide();
                 } else {
                     $http({
                         method: 'POST',
                         url: '/gantt/ajax/updateTask',
-                        data: $scope.selectedTask
+                        data: $scope.changeColorModel
                     }).then(function(response) {
                         if (response.data.status === 'ok') {
-                            changeColor($scope.selectedTask.order_id, $scope.selectedTask.color);
+                            changeColor($scope.changeColorModel.orderId, $scope.changeColorModel.color);
                             $scope.options.isLoading = false;
+                            $scope.changeColorModel = undefined;
+                            changeColorAside.hide();
                             $alert({
                                 title: 'Success!',
                                 content: '顏色更新成功',
@@ -375,9 +394,9 @@ angular.module('bhAdManager')
                         alert('Update Data Error');
                     });
                 }
-            }
+            };
 
-            var changeColor = function(order_id, color) {
+            var changeColor = function(orderId, color) {
                 var bgColor;
                 if (backgroundColor(color)) {
                     bgColor = 'isLight';
@@ -387,7 +406,7 @@ angular.module('bhAdManager')
                 for (var i = $scope.data.length - 1; i >= 0; i--) {
                     if ($scope.data[i].tasks !== undefined) {
                         for (var j = $scope.data[i].tasks.length - 1; j >= 0; j--) {
-                            if ($scope.data[i].tasks[j].order_id === order_id) {
+                            if ($scope.data[i].tasks[j].orderId === orderId) {
                                 $scope.data[i].tasks[j].color = color;
                                 if ($scope.data[i].tasks[j].classes !== undefined && $scope.data[i].tasks[j].classes.length > 0) {
                                     var classes = [];
@@ -403,53 +422,110 @@ angular.module('bhAdManager')
                         };
                     }
                 };
-            }
+            };
+
 
             $scope.taskCancelSelected = function() {
-                $scope.options.filterTask = {name: '' , orderName: '', order_id: ''};
+                $scope.options.filterTask.orderId = '';
                 $scope.selectedTask = undefined;
             }
 
-            $scope.writeFilterTask = function() {
-                $scope.options.filterTask = {
-                    name: $scope.options.filterTask.name
-                }
-            }
 
-            $scope.handleBooking = function() {
+            $scope.$watch('options.filterTask', function(newValue, oldValue) {
+                $scope.options.filterTask = angular.copy(newValue);
+            },true);
+
+
+            $scope.handleBooking = function(editOrderData) {
                 $log.info('handleBooking');
                 var $bookingFormScope = $scope.$new(true);
                 $bookingFormScope.ganttData = $scope.data;
-                $bookingFormScope.editOrderData = {};
+                if (editOrderData !== undefined) {
+                    $bookingFormScope.editOrderData = editOrderData;
+                }else {
+                    $bookingFormScope.editOrderData = undefined;
+                }
+
                 $scope._bookingForm = $modal({
                     scope: $bookingFormScope,
                     title: '新增委刊單',
                     content: 'Prepare your gantt data, please wait one moment...',
-                    templateUrl: '../scripts/views/bookingForm.tpl.html',
+                    templateUrl: '../app/scripts/views/bookingForm.tpl.html',
                     show: false,
                 });
                 $scope._bookingForm.$promise.then($scope._bookingForm.show);
-            }
+            };
+
+            $rootScope.$on('filterOrderId', function(event, taskModel) {
+                $scope.options.filterTask.orderId = taskModel.orderId;
+                $scope.selectedTask = angular.copy(taskModel);
+            });
+
+            $rootScope.$on('deleteBooking', function(event, args) {
+                // delete Orders.
+                if (args.deleteOrderId !== undefined) {
+                    var deleteOrderId = args.deleteOrderId;
+                }
+                if (args.reload === false) {
+                    for (var i = 0; i < $scope.data.length; i++) {
+                        if ($scope.data[i].tasks.length > 0) {
+                            for (var j = 0; j < $scope.data[i].tasks.length; j++) {
+                                 if ($scope.data[i].tasks[j].orderId === deleteOrderId) {
+                                    $scope.data[i].tasks.splice(j, 1);
+                                 }
+                            };
+                        }
+
+                    };
+                    $alert({
+                        title: 'Success!',
+                        content: 'Deleted Booking order success!',
+                        type: 'success',
+                        duration: 5,
+                        show: true
+                    });
+                }else {
+                    $scope.reload();
+                    $alert({
+                        title: 'Success!',
+                        content: 'Deleted Booking order success!',
+                        type: 'success',
+                        duration: 5,
+                        show: true
+                    });
+                }
+            });
+
             $rootScope.$on('addTasks', function(event, args) {
-                $log.info(args);
                 // Push New Tasks.
                 var taskDatas = args.taskDatas;
-                for (var i = 0; i < $scope.data.length; i++) {
-                     for (var j = 0; j < taskDatas.length; j++) {
-                         if (taskDatas[j].ad_unit_id === $scope.data[i].id) {
-                            // Change Tasks color.
-                            var taskClasses = [];
-                            taskClasses.push('isBooking');
-                            if (backgroundColor(taskDatas[j].color)) {
-                                taskClasses.push('isLight');
-                            } else {
-                                taskClasses.push('isDark');
-                            }
-                            taskDatas[j].classes = taskClasses;
-                            $scope.data[i].tasks.push(taskDatas[j]);
-                         }
-                     };
-                };
+                if (args.reload === false) {
+                    for (var i = 0; i < $scope.data.length; i++) {
+                         for (var j = 0; j < taskDatas.length; j++) {
+                             if (taskDatas[j].ad_unit_id === $scope.data[i].id) {
+                                // Change Tasks color.
+                                var taskClasses = [];
+                                taskClasses.push('isBooking');
+                                if (backgroundColor(taskDatas[j].color)) {
+                                    taskClasses.push('isLight');
+                                } else {
+                                    taskClasses.push('isDark');
+                                }
+                                taskDatas[j].classes = taskClasses;
+                                $scope.data[i].tasks.push(taskDatas[j]);
+                             }
+                         };
+                    };
+                }else {
+                    $scope.reload();
+                    $alert({
+                        title: 'Success!',
+                        content: 'Booking order success!',
+                        type: 'success',
+                        duration: 5,
+                        show: true
+                    });
+                }
             });
         }
     ]);

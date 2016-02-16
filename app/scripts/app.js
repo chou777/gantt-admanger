@@ -20,7 +20,9 @@ angular.module('bhAdManager', [
     'ngSanitize',
     'mgcrea.ngStrap',
     'colorpicker.module',
-]).config(['$compileProvider', '$modalProvider', '$alertProvider', function($compileProvider, $modalProvider, $alertProvider) {
+    'admanager.templates',
+    'ngAnimate'
+]).config(['$compileProvider', '$modalProvider', '$alertProvider', '$asideProvider', function($compileProvider, $modalProvider, $alertProvider, $asideProvider) {
     $compileProvider.debugInfoEnabled(true); // Remove debug info (angularJS >= 1.3)
 
     angular.extend($modalProvider.defaults, {
@@ -33,4 +35,10 @@ angular.module('bhAdManager', [
         duration: 3,
     });
 
+  angular.extend($asideProvider.defaults, {
+    animation: 'am-slide-left',
+    placement: 'left'
+  })
 }]);
+
+
