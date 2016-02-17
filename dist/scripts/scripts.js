@@ -1,5 +1,16 @@
 'use strict';
 
+
+angular.module('dfpDateFormat', []).filter('dfpDate', function() {
+    return function(input, format) {
+        var date = input.date.year + '-' + input.date.month + '-' + input.date.day;
+        date = date + ' ' + input.hour + ':' + input.minute + ':'+ input.second;
+        return moment( new Date(date)).format(format);
+    };
+});
+
+'use strict';
+
 /**
  * @ngdoc overview
  * @name bhAdManager
@@ -21,7 +32,8 @@ angular.module('bhAdManager', [
     'mgcrea.ngStrap',
     'colorpicker.module',
     'admanager.templates',
-    'ngAnimate'
+    'ngAnimate',
+    'dfpDateFormat'
 ]).config(['$compileProvider', '$modalProvider', '$alertProvider', '$asideProvider', function($compileProvider, $modalProvider, $alertProvider, $asideProvider) {
     $compileProvider.debugInfoEnabled(true); // Remove debug info (angularJS >= 1.3)
 
@@ -35,10 +47,10 @@ angular.module('bhAdManager', [
         duration: 3,
     });
 
-  angular.extend($asideProvider.defaults, {
-    animation: 'am-slide-left',
-    placement: 'left'
-  })
+    angular.extend($asideProvider.defaults, {
+        animation: 'am-slide-left',
+        placement: 'left'
+    });
 }]);
 
 
@@ -59,13 +71,14 @@ angular.module('bhAdManager')
         function($scope, $timeout, $log, utils, ObjectModel, Sample, mouseOffset, debounce, moment, $modal, $popover, $http, $sce, $alert, $rootScope, $aside) {
             var objectModel;
             var dataToRemove;
-
-            $scope.selectedTask = undefined;
+            $scope.orders = undefined;
+            $scope.selectedOrder = undefined;
+            $scope.selectedLineItem = undefined;
             var changeColorAside = $aside({scope: $scope, title: "編輯委刊單顏色", templateUrl: '../app/scripts/views/changeColorForm.tpl.html', show: false, backdrop: "static"});
-
 
             $scope.options = {
                 updateTime: undefined,
+                tabSelected: 'gantt', // gantt | lineItemList
                 setSideWidth: 250,
                 mode: 'custom',
                 scale: 'day',
@@ -145,9 +158,10 @@ angular.module('bhAdManager')
                 readOnly: true,
                 groupDisplayMode: 'Disabled',
                 filterTask: {
-                    name: '',
-                    orderId: '',
-                    status: ''
+                    name: undefined,
+                    orderId: undefined,
+                    status: undefined,
+                    id: undefined,
                 },
                 filterRow: '',
                 filterTaskStatusOptions: [
@@ -193,12 +207,10 @@ angular.module('bhAdManager')
                             switch (directiveName) {
                                 case 'ganttTask':
                                     element.on('click', function(event) {
-                                        if ($scope.selectedTask === undefined) {
-                                            $scope.options.filterTask.orderId = directiveScope.task.model.orderId;
-                                            $scope.selectedTask = directiveScope.task.model;
+                                        if ($scope.selectedOrder === undefined) {
+                                            $scope.handleSelectOrder(directiveScope.task.model.orderId)
                                         } else {
-                                            // $scope.options.filterTask.orderId = '';
-                                            // $scope.selectedTask = directiveScope.task.model;
+                                            $scope.handleSelectLineItem(directiveScope.task.model.orderId, directiveScope.task.model.id);
                                         }
                                         $scope.$digest();
                                     });
@@ -343,6 +355,7 @@ angular.module('bhAdManager')
                     Sample.getSampleData().success(function(response) {
                         getReady(response.ganttData.data);
                         $scope.options.updateTime = response.ganttData.updateTime;
+                        $scope.orders = response.ganttData.orders;
                     });
                 } else {
                     $http({
@@ -352,7 +365,7 @@ angular.module('bhAdManager')
                         if (response.data.status === 'ok') {
                             getReady(response.data.ganttData.data);
                             $scope.options.updateTime = response.data.ganttData.updateTime;
-
+                            $scope.orders = response.data.ganttData.orders;
                         } else {
                             alert('Load Data Error');
                         }
@@ -470,16 +483,38 @@ angular.module('bhAdManager')
             };
 
 
-            $scope.taskCancelSelected = function() {
-                $scope.options.filterTask.orderId = '';
-                $scope.selectedTask = undefined;
-            }
-
 
             $scope.$watch('options.filterTask', function(newValue, oldValue) {
                 $scope.options.filterTask = angular.copy(newValue);
             },true);
 
+            $scope.handleSelectOrder = function(orderId){
+                $scope.options.filterTask = {orderId: orderId, id: ''};
+                $scope.selectedOrder = $scope.orders[orderId];
+                $scope.selectedLineItem = undefined;
+            };
+
+            $scope.handleSelectLineItem = function(orderId,lineItemId) {
+                if ($scope.selectedLineItem === undefined) {
+                    $scope.options.filterTask.id = lineItemId;
+                    $scope.selectedLineItem =  $scope.orders[orderId].lineItems[lineItemId];
+                    for (var i = 0; i <  $scope.selectedLineItem.creatives.length; i++) {
+                        if ($scope.selectedLineItem.creatives[i].previewUrl !== undefined || $scope.selectedLineItem.creatives[i].previewUrl !== '') {
+                            $scope.selectedLineItem.creatives[i].iframeUrl = $sce.trustAsResourceUrl(angular.copy($scope.selectedLineItem.creatives[i].previewUrl));
+                        }
+                    }
+                    $scope.options.tabSelected = 'gantt';
+                }
+
+            };
+
+            $scope.resizeIframe
+            $scope.handleInit = function(){
+                $scope.options.filterTask = {orderId: '', id: ''};
+                $scope.selectedOrder =  undefined;
+                $scope.selectedLineItem = undefined;
+                $scope.options.tabSelected = 'gantt';
+            };
 
             $scope.handleBooking = function(editOrderData) {
                 $log.info('handleBooking');
@@ -503,7 +538,7 @@ angular.module('bhAdManager')
 
             $rootScope.$on('filterOrderId', function(event, taskModel) {
                 $scope.options.filterTask.orderId = taskModel.orderId;
-                $scope.selectedTask = angular.copy(taskModel);
+                $scope.selectedOrder = angular.copy(taskModel);
             });
 
             $rootScope.$on('deleteBooking', function(event, args) {

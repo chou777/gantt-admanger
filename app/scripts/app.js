@@ -21,7 +21,8 @@ angular.module('bhAdManager', [
     'mgcrea.ngStrap',
     'colorpicker.module',
     'admanager.templates',
-    'ngAnimate'
+    'ngAnimate',
+    'dfpDateFormat'
 ]).config(['$compileProvider', '$modalProvider', '$alertProvider', '$asideProvider', function($compileProvider, $modalProvider, $alertProvider, $asideProvider) {
     $compileProvider.debugInfoEnabled(true); // Remove debug info (angularJS >= 1.3)
 
@@ -35,10 +36,10 @@ angular.module('bhAdManager', [
         duration: 3,
     });
 
-  angular.extend($asideProvider.defaults, {
-    animation: 'am-slide-left',
-    placement: 'left'
-  })
+    angular.extend($asideProvider.defaults, {
+        animation: 'am-slide-left',
+        placement: 'left'
+    });
 }]);
 
 

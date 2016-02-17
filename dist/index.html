@@ -66,9 +66,9 @@
                                                 <div class="form-group input-append text-center">
                                                     <label class="control-label"><i class="fa fa-filter"></i> 篩選委刊單</label><br>
                                                     <div class="input-group">
-                                                        <input type="text" class="form-control" style="width: 8em; text-align: left" ng-model="options.filterTask.name"  ng-disabled="options.selectedTask">
-                                                        <div class="input-group-btn" ng-if="options.filterTask.name != ''">
-                                                            <button type="button" class="btn btn-default" aria-label="close" ng-click="options.filterTask.name = ''" ng-disabled="options.selectedTask"><span class="glyphicon glyphicon-remove"></span></button>
+                                                        <input type="text" class="form-control" style="width: 8em; text-align: left" ng-model="options.filterTask.name">
+                                                        <div class="input-group-btn" ng-if="options.filterTask.name != undefined">
+                                                            <button type="button" class="btn btn-default" aria-label="close" ng-click="options.filterTask.name = ''"><span class="glyphicon glyphicon-remove"></span></button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -79,8 +79,8 @@
                                                         <select class="form-control"  ng-model="options.filterTask.status" >
                                                             <option ng-repeat="status in options.filterTaskStatusOptions track by status.key " value="{{status.key}}">{{status.name}}</option>
                                                         </select>
-                                                        <div class="input-group-btn" ng-if="options.filterTask.status != ''">
-                                                            <button type="button" class="btn btn-default" aria-label="close" ng-click="options.filterTask.status = ''" ng-disabled="options.selectedTask"><span class="glyphicon glyphicon-remove"></span></button>
+                                                        <div class="input-group-btn" ng-if="options.filterTask.status != undefined">
+                                                            <button type="button" class="btn btn-default" aria-label="close" ng-click="options.filterTask.status = ''"><span class="glyphicon glyphicon-remove"></span></button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -134,16 +134,107 @@
 
             <div class="row top-buffer">
                 <div class="col-md-12">
-                    <div class="panel-body selected-tags">
-                        <button type="button" ng-click="taskCancelSelected()"  ng-if="selectedTask != undefined" class="btn btn-default" ng-class="selectedTask.classes" ng-style="{'background-color': selectedTask.color }">
-                            {{ selectedTask.orderName }}
-                            <span class="glyphicon glyphicon-remove"></span>
-                        </button>
-                    </div>
+                    <ol class="breadcrumb" style="margin-bottom: 5px;" ng-if="selectedOrder || selectedLineItem">
+                      　　<li><a href="#" ng-click="handleInit()">All</a></li>
+                      　　<li ng-if="selectedOrder != undefined"><a href="#" ng-click="handleSelectOrder(selectedOrder.id)">{{selectedOrder.name}}</a></li>
+                      　　<li ng-if="selectedLineItem != undefined" class="active">{{selectedLineItem.name}}</li>
+                    </ol>
+                </div>
+                <div ng-if="selectedOrder && !selectedLineItem">
+                    <dl class="dl-horizontal">
+                      <dt>委刊單名稱:</dt>
+                      <dd>{{ selectedOrder.name }}</dd>
+                      <dt>狀態:</dt>
+                      <dd>{{ selectedOrder.status }}</dd>
+                      <dt>時間:</dt>
+                      <dd>{{ selectedOrder.startDateTime | dfpDate:"YYYY-MM-DD HH:mm"}}　～　{{ selectedOrder.endDateTime | dfpDate:"YYYY-MM-DD HH:mm"}}　{{ selectedOrder. timeZoneID}}</dd>
+                      <dt>曝光量:</dt>
+                      <dd>{{ selectedOrder.totalImpressionsDelivered }}</dd>
+                      <dt>點擊次數:</dt>
+                      <dd>{{ selectedOrder.totalClicksDelivered }}</dd>
+                      <dt>點擊率:</dt>
+                      <dd>{{ selectedOrder.totalClicksDelivered / selectedOrder.totalImpressionsDelivered * 100 | number: 2}}%</dd>
+                    </dl>
+
+                </div>
+                <div ng-if="selectedLineItem">
+                    <dl class="dl-horizontal">
+                        <dt>名稱</dt><dd>{{ selectedLineItem.name }}</dd>
+                        <dt>狀態</dt><dd>{{ selectedLineItem.status }}</dd>
+                        <dt>開始時間</dt><dd>{{ selectedLineItem.startDateTime | dfpDate:"YYYY-MM-DD HH:mm" }}</dd>
+                        <dt>結束時間</dt><dd>{{ selectedLineItem.endDateTime | dfpDate:"YYYY-MM-DD HH:mm" }}</dd>
+                        <dt>進度</dt><dd>{{ selectedLineItem.deliveryIndicator.actualDeliveryPercentage | number: 2 }}</dd>
+                        <dt>費率</dt><dd>{{ selectedLineItem.valueCostPerUnit.microAmount }} {{ selectedLineItem.valueCostPerUnit.currencyCode }}&nbsp;<span style="font-size: 10px">千次曝光計價</span></dd>
+                        <dt>目標</dt><dd>{{ selectedLineItem.primaryGoal.IMPRESSIONS }} {{ selectedLineItem.primaryGoal.units }}</dd>
+                        <dt>曝光</dt><dd>{{ selectedLineItem.stats.impressionsDelivered }}</dd>
+                        <dt>點擊</dt><dd>{{ selectedLineItem.stats.clicksDelivered }}</dd>
+                       <dt>點擊率</dt><dd>{{ ((selectedLineItem.stats.clicksDelivered / selectedLineItem.stats.impressionsDelivered) * 100) | number: 2 }}%</dd>
+                        <dt>廣告素材</dt>
+                        <dd>
+                            <ul class="list-group">
+                                <li class="list-group-item" ng-repeat="creative in selectedLineItem.creatives track by creative.id">
+                                    <div>ID: {{ creative.id }}</div>
+                                    <div>名稱：{{ creative.name }}</div>
+                                    <div>尺寸: {{ creative.size.width }} X {{ creative.size.height }}</div>
+                                    <div>連結:　<a target="_blank" href="{{ creative.destinationUrl }}">{{ creative.destinationUrl }}</a></div>
+
+                                    <iframe scrolling="no" width="{{ creative.size.width }}" height="{{ creative.size.height }}" ng-src="{{ creative.iframeUrl }}"/></iframe>
+                                </li>
+                            </ul>
+
+                        </dd>
+
+                   </dl>
                 </div>
                 <div class="col-md-12">
                     <div class="panel-group" bs-collapse>
-                        <div class="panel panel-default">
+                        <div class="panel-heading" ng-if="selectedOrder && !selectedLineItem" style="text-align: right;">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-default" aria-label="List" ng-click="options.tabSelected = 'lineItemList'"
+                                    ng-class="{'active' : options.tabSelected == 'lineItemList'}">
+                                    <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+                                </button>
+                                <button type="button" class="btn btn-default" aria-label="Gantt" ng-click="options.tabSelected = 'gantt'"
+                                    ng-class="{'active' : options.tabSelected == 'gantt'}">
+                                    <span class="glyphicon glyphicon-tasks" aria-hidden="true"></span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="panel panel-default" ng-if="selectedOrder && options.tabSelected == 'lineItemList'">
+                            <table id="line-items" class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>名稱</th>
+                                        <th>狀態</th>
+                                        <th>開始時間</th>
+                                        <th>結束時間</th>
+                                        <th>進度</th>
+                                        <th>費率</th>
+                                        <th>目標</th>
+                                        <th>曝光</th>
+                                        <th>點擊</th>
+                                        <th>點擊率</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="lineItem in selectedOrder.lineItems track by lineItem.id" ng-click="handleSelectLineItem(lineItem.orderId, lineItem.id)">
+                                        <td>{{ lineItem.name }}</td>
+                                        <td>{{ lineItem.status }}</td>
+                                        <td>{{ lineItem.startDateTime | dfpDate:"YYYY-MM-DD HH:mm" }}</td>
+                                        <td>{{ lineItem.endDateTime | dfpDate:"YYYY-MM-DD HH:mm" }}</td>
+                                        <td>{{ lineItem.deliveryIndicator.actualDeliveryPercentage | number: 2 }}</td>
+                                        <td>{{ lineItem.valueCostPerUnit.microAmount }} {{ lineItem.valueCostPerUnit.currencyCode }}<br>
+                                            <span style="font-size: 10px">千次曝光計價</span></td>
+                                        <td>{{ lineItem.primaryGoal.IMPRESSIONS }} {{ lineItem.primaryGoal.units }}</td>
+                                        <td>{{ lineItem.stats.impressionsDelivered }}</td>
+                                        <td>{{ lineItem.stats.clicksDelivered }}</td>
+                                        <td>{{ ((lineItem.stats.clicksDelivered / lineItem.stats.impressionsDelivered) * 100) | number: 2 }}%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="panel panel-default" ng-show="options.tabSelected == 'gantt'">
                             <div class="panel-collapse" bs-collapse-target>
                                 <div class="panel-body" class="panel panel-default position-fixed" data-target="menu-{{ $index }}">
                                     <div gantt
