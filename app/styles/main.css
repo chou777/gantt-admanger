@@ -228,3 +228,7 @@ textarea.live-row {
 :focus {
     outline: 0;
 }
+
+.breadcrumb li{
+    float: left;
+}
