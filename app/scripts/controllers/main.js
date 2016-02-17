@@ -7,7 +7,7 @@
  * # MainCtrl
  * Controller of the bhAdManager
  */
-const environment = "TEST";
+var environment = "TEST";
 
 angular.module('bhAdManager')
     .controller('MainCtrl', ['$scope', '$timeout', '$log', 'ganttUtils', 'GanttObjectModel', 'Sample', 'ganttMouseOffset', 'ganttDebounce', 'moment', '$modal', '$popover', '$http', '$sce', '$alert', '$rootScope', '$aside',
