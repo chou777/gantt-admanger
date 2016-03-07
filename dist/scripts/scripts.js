@@ -3,9 +3,11 @@
 
 angular.module('dfpDateFormat', []).filter('dfpDate', function() {
     return function(input, format) {
-        var date = input.date.year + '-' + input.date.month + '-' + input.date.day;
-        date = date + ' ' + input.hour + ':' + input.minute + ':'+ input.second;
-        return moment( new Date(date)).format(format);
+        var date = input.date.year + '-' + (parseInt(input.date.month, 10) < 10 ? '0'+input.date.month : input.date.month)
+         + '-' + (parseInt(input.date.day, 10) < 10 ? '0'+input.date.day : input.date.day);
+        date = date + ' ' + (parseInt(input.hour, 10) < 10 ? '0'+input.hour : input.hour) + ':' + (parseInt(input.minute, 10) < 10 ? '0'+input.minute : input.minute)
+         + ':'+ (parseInt(input.second, 10) < 10 ? '0'+input.second : input.second);
+        return moment(date).format(format);
     };
 });
 
@@ -64,7 +66,7 @@ angular.module('bhAdManager', [
  * # MainCtrl
  * Controller of the bhAdManager
  */
-const environment = "TEST";
+var environment = "TEST";
 
 angular.module('bhAdManager')
     .controller('MainCtrl', ['$scope', '$timeout', '$log', 'ganttUtils', 'GanttObjectModel', 'Sample', 'ganttMouseOffset', 'ganttDebounce', 'moment', '$modal', '$popover', '$http', '$sce', '$alert', '$rootScope', '$aside',
@@ -207,10 +209,12 @@ angular.module('bhAdManager')
                             switch (directiveName) {
                                 case 'ganttTask':
                                     element.on('click', function(event) {
-                                        if ($scope.selectedOrder === undefined) {
-                                            $scope.handleSelectOrder(directiveScope.task.model.orderId)
-                                        } else {
-                                            $scope.handleSelectLineItem(directiveScope.task.model.orderId, directiveScope.task.model.id);
+                                        if (directiveScope.task.model.status !== 'BOOKING') {
+                                           if ($scope.selectedOrder === undefined) {
+                                                $scope.handleSelectOrder(directiveScope.task.model.orderId)
+                                            } else {
+                                                $scope.handleSelectLineItem(directiveScope.task.model.orderId, directiveScope.task.model.id);
+                                            }
                                         }
                                         $scope.$digest();
                                     });
@@ -575,7 +579,9 @@ angular.module('bhAdManager')
                     });
                 }
             });
-
+            $rootScope.$on('reload', function(event, args) {
+                $scope.reload();
+            });
             $rootScope.$on('addTasks', function(event, args) {
                 // Push New Tasks.
                 var taskDatas = args.taskDatas;
@@ -981,6 +987,20 @@ angular.module('bhAdManager')
                     alert('請檢查資料是否填寫正確');
                 }
             }
+            $scope.handleSyncingToDFP = function() {
+                $log.info('handleSyncingToDFP');
+                if (vaildationBookingForm($scope.bookingForm) !== false ){
+                    if (environment === 'TEST') {
+                        alert('Test Success to DFP');
+                        $scope.$hide();
+                    } else {
+                        syncingToDFP();
+                    }
+                }　else {
+                    alert('請檢查資料是否填寫正確');
+                }
+            };
+
             var saveBooking = function() {
                 $http({
                     method: $scope.bookingForm.isEdit === true ? 'PUT': 'POST',
@@ -1012,6 +1032,24 @@ angular.module('bhAdManager')
                     }
                 }, function(response) {
                      alert('Delete Order Data Error');
+                });
+            };
+
+            var syncingToDFP = function() {
+                $rootScope.$emit('isLoading', true);
+                $http({
+                    method: 'POST',
+                    url: '/gantt/ajax/syncingToDFP',
+                    data: $scope.bookingForm
+                }).then(function(response) {
+                    if (response.data.status === 'ok') {
+                        $scope.$hide();
+                        $rootScope.$emit('reload', true);
+                    } else {
+                        alert('Save to DFP Error');
+                    }
+                }, function(response) {
+                     alert('Save to DFP Error');
                 });
             };
 
@@ -1154,7 +1192,8 @@ angular.module('admanager.templates', []).run(['$templateCache', function($templ
         '                <div class="modal-footer">\n' +
         '                <div class="form-actions">\n' +
         '                    <button id="handle-delete-booking" ng-if="editOrderData" class="btn btn-danger" ng-click="handlePopoverConfirm(\'handleDeleteBooking\', $event)"><i class="glyphicon glyphicon-trash"></i>Delete</button>\n' +
-        '                    <button class="btn btn-primary" type="submit" ng-click="handleSaveBooking()">Save Booking</button>\n' +
+        '                    <button class="btn btn-primary" type="submit" ng-click="handleSaveBooking()">儲存 Booking</button>\n' +
+        '                    <button ng-if="editOrderData !== undefined" class="btn btn-success" type="submit" ng-click="handleSyncingToDFP()">傳送到DFP</button>\n' +
         '                </div>\n' +
         '\n' +
         '\n' +

@@ -99,7 +99,8 @@ angular.module('admanager.templates', []).run(['$templateCache', function($templ
         '                <div class="modal-footer">\n' +
         '                <div class="form-actions">\n' +
         '                    <button id="handle-delete-booking" ng-if="editOrderData" class="btn btn-danger" ng-click="handlePopoverConfirm(\'handleDeleteBooking\', $event)"><i class="glyphicon glyphicon-trash"></i>Delete</button>\n' +
-        '                    <button class="btn btn-primary" type="submit" ng-click="handleSaveBooking()">Save Booking</button>\n' +
+        '                    <button class="btn btn-primary" type="submit" ng-click="handleSaveBooking()">儲存 Booking</button>\n' +
+        '                    <button ng-if="editOrderData !== undefined" class="btn btn-success" type="submit" ng-click="handleSyncingToDFP()">傳送到DFP</button>\n' +
         '                </div>\n' +
         '\n' +
         '\n' +

@@ -157,6 +157,20 @@ angular.module('bhAdManager')
                     alert('請檢查資料是否填寫正確');
                 }
             }
+            $scope.handleSyncingToDFP = function() {
+                $log.info('handleSyncingToDFP');
+                if (vaildationBookingForm($scope.bookingForm) !== false ){
+                    if (environment === 'TEST') {
+                        alert('Test Success to DFP');
+                        $scope.$hide();
+                    } else {
+                        syncingToDFP();
+                    }
+                }　else {
+                    alert('請檢查資料是否填寫正確');
+                }
+            };
+
             var saveBooking = function() {
                 $http({
                     method: $scope.bookingForm.isEdit === true ? 'PUT': 'POST',
@@ -188,6 +202,24 @@ angular.module('bhAdManager')
                     }
                 }, function(response) {
                      alert('Delete Order Data Error');
+                });
+            };
+
+            var syncingToDFP = function() {
+                $rootScope.$emit('isLoading', true);
+                $http({
+                    method: 'POST',
+                    url: '/gantt/ajax/syncingToDFP',
+                    data: $scope.bookingForm
+                }).then(function(response) {
+                    if (response.data.status === 'ok') {
+                        $scope.$hide();
+                        $rootScope.$emit('reload', true);
+                    } else {
+                        alert('Save to DFP Error');
+                    }
+                }, function(response) {
+                     alert('Save to DFP Error');
                 });
             };
 

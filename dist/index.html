@@ -2,12 +2,12 @@
 <html class="no-js">
 <head>
     <meta charset="utf-8">
-    <title>Angular Gantt - Gantt chart component for AngularJS (Demo)</title>
+    <title>BAGC - Bhuntr Ads' Gantt Chart</title>
     <meta name="description" content="Gantt chart component for AngularJS">
     <meta name="viewport" content="width=device-width">
 
     <link rel="canonical" href="https://www.angular-gantt.com/">
-    <link rel="shortcut icon" href="http://www.angular-gantt.com/img/favicon.ico">
+    <link rel="shortcut icon" href="./img/favicon.ico">
 
     <meta property="og:title" content="Angular Gantt (Demo)" />
     <meta property="og:description" content="Gantt chart component for AngularJS" />
@@ -131,60 +131,99 @@
             </div>
             <div id="alerts-container"></div>
 
-
             <div class="row top-buffer">
                 <div class="col-md-12">
-                    <ol class="breadcrumb" style="margin-bottom: 5px;" ng-if="selectedOrder || selectedLineItem">
+                    <ol class="breadcrumb clearfix row" style="margin-bottom: 5px;" ng-if="selectedOrder || selectedLineItem">
                       　　<li><a href="#" ng-click="handleInit()">All</a></li>
                       　　<li ng-if="selectedOrder != undefined"><a href="#" ng-click="handleSelectOrder(selectedOrder.id)">{{selectedOrder.name}}</a></li>
                       　　<li ng-if="selectedLineItem != undefined" class="active">{{selectedLineItem.name}}</li>
                     </ol>
                 </div>
                 <div ng-if="selectedOrder && !selectedLineItem">
-                    <dl class="dl-horizontal">
-                      <dt>委刊單名稱:</dt>
-                      <dd>{{ selectedOrder.name }}</dd>
-                      <dt>狀態:</dt>
-                      <dd>{{ selectedOrder.status }}</dd>
-                      <dt>時間:</dt>
-                      <dd>{{ selectedOrder.startDateTime | dfpDate:"YYYY-MM-DD HH:mm"}}　～　{{ selectedOrder.endDateTime | dfpDate:"YYYY-MM-DD HH:mm"}}　{{ selectedOrder. timeZoneID}}</dd>
-                      <dt>曝光量:</dt>
-                      <dd>{{ selectedOrder.totalImpressionsDelivered }}</dd>
-                      <dt>點擊次數:</dt>
-                      <dd>{{ selectedOrder.totalClicksDelivered }}</dd>
-                      <dt>點擊率:</dt>
-                      <dd>{{ selectedOrder.totalClicksDelivered / selectedOrder.totalImpressionsDelivered * 100 | number: 2}}%</dd>
-                    </dl>
-
+                    <div class="row">
+                      <div class="info-block col-md-1">
+                          <div class="info-title">委刊單名稱</div>
+                          <div class="info-value">{{ selectedOrder.name }}</div>
+                      </div>
+                      <div class="info-block col-md-1">
+                          <div class="info-title">狀態</div>
+                          <div class="info-value">{{ selectedOrder.status }}</div>
+                      </div>
+                      <div class="info-block col-md-2">
+                          <div class="info-title">時間</div>
+                          <div class="info-value">From: {{ selectedOrder.startDateTime | dfpDate:"YYYY-MM-DD HH:mm"}}<br> To:{{ selectedOrder.endDateTime | dfpDate:"YYYY-MM-DD HH:mm"}}　{{ selectedOrder. timeZoneID}}</div>
+                      </div>
+                      <div class="info-block col-md-1">
+                          <div class="info-title">曝光量</div>
+                          <div class="info-value">{{ selectedOrder.totalImpressionsDelivered }}</div>
+                      </div>
+                      <div class="info-block col-md-1">
+                          <div class="info-title">點擊次數</div>
+                          <div class="info-value">{{ selectedOrder.totalClicksDelivered }}</div>
+                      </div>
+                      <div class="info-block col-md-1">
+                          <div class="info-title">點擊率</div>
+                          <div class="info-value">{{ selectedOrder.totalClicksDelivered / selectedOrder.totalImpressionsDelivered * 100 | number: 2}}%</div>
+                      </div>
+                    </div>
                 </div>
                 <div ng-if="selectedLineItem">
-                    <dl class="dl-horizontal">
-                        <dt>名稱</dt><dd>{{ selectedLineItem.name }}</dd>
-                        <dt>狀態</dt><dd>{{ selectedLineItem.status }}</dd>
-                        <dt>開始時間</dt><dd>{{ selectedLineItem.startDateTime | dfpDate:"YYYY-MM-DD HH:mm" }}</dd>
-                        <dt>結束時間</dt><dd>{{ selectedLineItem.endDateTime | dfpDate:"YYYY-MM-DD HH:mm" }}</dd>
-                        <dt>進度</dt><dd>{{ selectedLineItem.deliveryIndicator.actualDeliveryPercentage | number: 2 }}</dd>
-                        <dt>費率</dt><dd>{{ selectedLineItem.valueCostPerUnit.microAmount }} {{ selectedLineItem.valueCostPerUnit.currencyCode }}&nbsp;<span style="font-size: 10px">千次曝光計價</span></dd>
-                        <dt>目標</dt><dd>{{ selectedLineItem.primaryGoal.IMPRESSIONS }} {{ selectedLineItem.primaryGoal.units }}</dd>
-                        <dt>曝光</dt><dd>{{ selectedLineItem.stats.impressionsDelivered }}</dd>
-                        <dt>點擊</dt><dd>{{ selectedLineItem.stats.clicksDelivered }}</dd>
-                       <dt>點擊率</dt><dd>{{ ((selectedLineItem.stats.clicksDelivered / selectedLineItem.stats.impressionsDelivered) * 100) | number: 2 }}%</dd>
-                        <dt>廣告素材</dt>
-                        <dd>
-                            <ul class="list-group">
-                                <li class="list-group-item" ng-repeat="creative in selectedLineItem.creatives track by creative.id">
-                                    <div>ID: {{ creative.id }}</div>
-                                    <div>名稱：{{ creative.name }}</div>
-                                    <div>尺寸: {{ creative.size.width }} X {{ creative.size.height }}</div>
-                                    <div>連結:　<a target="_blank" href="{{ creative.destinationUrl }}">{{ creative.destinationUrl }}</a></div>
+                    <div class="row">
+                        <div class="info-block col-md-1">
+                            <div class="info-title">名稱</div>
+                            <div class="info-value">{{ selectedLineItem.name }}</div>
+                        </div>
+                        <div class="info-block col-md-1">
+                            <div class="info-title">狀態</div>
+                            <div class="info-value">{{ selectedLineItem.status }}</div>
+                        </div>
+                        <div class="info-block col-md-1">
+                            <div class="info-title">開始時間</div>
+                            <div class="info-value">{{ selectedLineItem.startDateTime | dfpDate:"YYYY-MM-DD HH:mm" }}</div>
+                        </div>
+                        <div class="info-block col-md-1">
+                            <div class="info-title">結束時間</div>
+                            <div class="info-value">{{ selectedLineItem.endDateTime | dfpDate:"YYYY-MM-DD HH:mm" }}</div>
+                        </div>
+                        <div class="info-block col-md-1">
+                            <div class="info-title">進度</div>
+                            <div class="info-value">{{ selectedLineItem.deliveryIndicator.actualDeliveryPercentage | number: 2 }}</div>
+                        </div>
+                        <div class="info-block col-md-1">
+                            <div class="info-title">費率</div>
+                            <div class="info-value">{{ selectedLineItem.valueCostPerUnit.microAmount }} {{ selectedLineItem.valueCostPerUnit.currencyCode }}&nbsp;<span style="font-size: 10px">千次曝光計價</span></div>
+                        </div>
+                        <div class="info-block col-md-1">
+                            <div class="info-title">目標</div>
+                            <div class="info-value">{{ selectedLineItem.primaryGoal.IMPRESSIONS }} {{ selectedLineItem.primaryGoal.units }}</div>
+                        </div>
+                        <div class="info-block col-md-1">
+                            <div class="info-title">目標</div>
+                            <div class="info-value">{{ selectedLineItem.stats.impressionsDelivered }}</div>
+                        </div>
+                        <div class="info-block col-md-1">
+                            <div class="info-title">點擊</div>
+                            <div class="info-value">{{ selectedLineItem.stats.clicksDelivered }}</div>
+                        </div>
+                        <div class="info-block col-md-1">
+                            <div class="info-title">點擊率</div>
+                            <div class="info-value">{{ ((selectedLineItem.stats.clicksDelivered / selectedLineItem.stats.impressionsDelivered) * 100) | number: 2 }}%</div>
+                        </div>
+                    </div>
 
-                                    <iframe scrolling="no" width="{{ creative.size.width }}" height="{{ creative.size.height }}" ng-src="{{ creative.iframeUrl }}"/></iframe>
-                                </li>
-                            </ul>
+                    <div class="source">
+                        <div>廣告素材</div>
+                        <ul class="list-group">
+                            <li class="list-group-item" ng-repeat="creative in selectedLineItem.creatives track by creative.id">
+                                <div>ID: {{ creative.id }}</div>
+                                <div>名稱：{{ creative.name }}</div>
+                                <div>尺寸: {{ creative.size.width }} X {{ creative.size.height }}</div>
+                                <div>連結:　<a target="_blank" href="{{ creative.destinationUrl }}">{{ creative.destinationUrl }}</a></div>
 
-                        </dd>
-
-                   </dl>
+                                <iframe scrolling="no" width="{{ creative.size.width }}" height="{{ creative.size.height }}" ng-src="{{ creative.iframeUrl }}"/></iframe>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="col-md-12">
                     <div class="panel-group" bs-collapse>

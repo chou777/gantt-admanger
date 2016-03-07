@@ -150,10 +150,12 @@ angular.module('bhAdManager')
                             switch (directiveName) {
                                 case 'ganttTask':
                                     element.on('click', function(event) {
-                                        if ($scope.selectedOrder === undefined) {
-                                            $scope.handleSelectOrder(directiveScope.task.model.orderId)
-                                        } else {
-                                            $scope.handleSelectLineItem(directiveScope.task.model.orderId, directiveScope.task.model.id);
+                                        if (directiveScope.task.model.status !== 'BOOKING') {
+                                           if ($scope.selectedOrder === undefined) {
+                                                $scope.handleSelectOrder(directiveScope.task.model.orderId)
+                                            } else {
+                                                $scope.handleSelectLineItem(directiveScope.task.model.orderId, directiveScope.task.model.id);
+                                            }
                                         }
                                         $scope.$digest();
                                     });
@@ -518,7 +520,9 @@ angular.module('bhAdManager')
                     });
                 }
             });
-
+            $rootScope.$on('reload', function(event, args) {
+                $scope.reload();
+            });
             $rootScope.$on('addTasks', function(event, args) {
                 // Push New Tasks.
                 var taskDatas = args.taskDatas;
