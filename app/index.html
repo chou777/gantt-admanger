@@ -81,7 +81,7 @@
                                                     <div class="input-group">
                                                         <input type="text" class="form-control" style="width: 8em; text-align: left" ng-model="options.filterTask.name">
                                                         <div class="input-group-btn" ng-if="options.filterTask.name != undefined">
-                                                            <button type="button" class="btn btn-default" aria-label="close" ng-click="options.filterTask.name = ''"><span class="glyphicon glyphicon-remove"></span></button>
+                                                            <button type="button" class="btn btn-default" aria-label="close" ng-click="options.filterTask.name = undefined"><span class="glyphicon glyphicon-remove"></span></button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -93,7 +93,7 @@
                                                             <option ng-repeat="status in options.filterTaskStatusOptions track by status.key " value="{{status.key}}">{{status.name}}</option>
                                                         </select>
                                                         <div class="input-group-btn" ng-if="options.filterTask.status != undefined">
-                                                            <button type="button" class="btn btn-default" aria-label="close" ng-click="options.filterTask.status = ''"><span class="glyphicon glyphicon-remove"></span></button>
+                                                            <button type="button" class="btn btn-default" aria-label="close" ng-click="options.filterTask.status = undefined"><span class="glyphicon glyphicon-remove"></span></button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -216,7 +216,7 @@
                                 <div class="info-value">{{ ((selectedLineItem.stats.clicksDelivered / selectedLineItem.stats.impressionsDelivered) * 100) | number: 2 }}%</div>
                             </div>
                         </div>
-                        
+
                         <hr>
 
                         <div class="source">

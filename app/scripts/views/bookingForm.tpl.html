@@ -62,7 +62,7 @@
                                         <div class="form-group">
                                             <label class="control-label col-sm-2" for="{{ 'lineItemFromDate' + $index }}">開始時間</label>
                                             <div class="col-sm-10">
-                                                <input type="text" class="form-control" name="{{ 'lineItemFromDate' + $index }}" ng-model="lineItem.fromDate" max-date="{{ lineItem.toDate }}" start-date="{{ lineItem.currentDateValue.toString() }}" start-week="1" placeholder="From" bs-datepicker required>
+                                                <input type="text" class="form-control" name="{{ 'lineItemFromDate' + $index }}" ng-model="lineItem.fromDate" min-date="today" max-date="{{ lineItem.toDate }}" start-date="{{ lineItem.currentDateValue.toString() }}" start-week="1" placeholder="From" bs-datepicker required>
                                                 <div ng-show="bForm.$submitted || bForm['lineItemFromDate'+$index].$touched">
                                                     <div class="error" ng-show="bForm['lineItemFromDate'+$index].$error.required">填寫開始時間</div>
                                                 </div>

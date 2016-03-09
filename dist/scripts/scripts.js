@@ -874,7 +874,7 @@ angular.module('bhAdManager')
                         };
                     }
                 };
-                return $filter('filter')(tasks, filterTask, undefined);
+                return $filter('filter')(tasks, filterTask, true);
             }
 
             // Is Edit Form
@@ -1002,19 +1002,32 @@ angular.module('bhAdManager')
             };
 
             var saveBooking = function() {
+                var bookingForm = angular.copy($scope.bookingForm);
+                angular.forEach(bookingForm.lineItems, function(lineItem, key){
+                    lineItem.fromDate = moment(lineItem.fromDate).format('YYYY-MM-DD HH:mm:ss');
+                    lineItem.toDate = moment(lineItem.toDate).format('YYYY-MM-DD HH:mm:ss');
+                });
                 $http({
                     method: $scope.bookingForm.isEdit === true ? 'PUT': 'POST',
                     url: '/gantt/ajax/saveBooking',
-                    data: $scope.bookingForm
+                    data: bookingForm
                 }).then(function(response) {
                     if (response.data.status === 'ok') {
                         $scope.$hide();
                         $rootScope.$emit('addTasks', {reload: true});
                     } else {
-                        alert('Save Order Data Error');
+                       if (response.data.message !== undefined) {
+                            alert(response.data.message);
+                        }else {
+                            alert('Save Order Data Error');
+                        }
                     }
                 }, function(response) {
-                     alert('Save Order Data Error');
+                       if (response.data.message !== undefined) {
+                            alert(response.data.message);
+                        }else {
+                            alert('Save Order Data Error');
+                        }
                 });
             }
 
@@ -1036,20 +1049,35 @@ angular.module('bhAdManager')
             };
 
             var syncingToDFP = function() {
+                var bookingForm = angular.copy($scope.bookingForm);
+                angular.forEach(bookingForm.lineItems, function(lineItem, key){
+                    lineItem.fromDate = moment(lineItem.fromDate).format('YYYY-MM-DD HH:mm:ss');
+                    lineItem.toDate = moment(lineItem.toDate).format('YYYY-MM-DD HH:mm:ss');
+                });
                 $rootScope.$emit('isLoading', true);
                 $http({
                     method: 'POST',
                     url: '/gantt/ajax/syncingToDFP',
-                    data: $scope.bookingForm
+                    data: bookingForm
                 }).then(function(response) {
                     if (response.data.status === 'ok') {
                         $scope.$hide();
                         $rootScope.$emit('reload', true);
                     } else {
-                        alert('Save to DFP Error');
+                       if (response.data.message !== undefined) {
+                            alert(response.data.message);
+                        }else {
+                            alert('Save Order Data Error');
+                        }
+                        $rootScope.$emit('isLoading', false);
                     }
                 }, function(response) {
-                     alert('Save to DFP Error');
+                   if (response.data.message !== undefined) {
+                        alert(response.data.message);
+                    }else {
+                        alert('Save Order Data Error');
+                    }
+                    $rootScope.$emit('isLoading', false);
                 });
             };
 
@@ -1158,7 +1186,7 @@ angular.module('admanager.templates', []).run(['$templateCache', function($templ
         '                                        <div class="form-group">\n' +
         '                                            <label class="control-label col-sm-2" for="{{ \'lineItemFromDate\' + $index }}">開始時間</label>\n' +
         '                                            <div class="col-sm-10">\n' +
-        '                                                <input type="text" class="form-control" name="{{ \'lineItemFromDate\' + $index }}" ng-model="lineItem.fromDate" max-date="{{ lineItem.toDate }}" start-date="{{ lineItem.currentDateValue.toString() }}" start-week="1" placeholder="From" bs-datepicker required>\n' +
+        '                                                <input type="text" class="form-control" name="{{ \'lineItemFromDate\' + $index }}" ng-model="lineItem.fromDate" min-date="today" max-date="{{ lineItem.toDate }}" start-date="{{ lineItem.currentDateValue.toString() }}" start-week="1" placeholder="From" bs-datepicker required>\n' +
         '                                                <div ng-show="bForm.$submitted || bForm[\'lineItemFromDate\'+$index].$touched">\n' +
         '                                                    <div class="error" ng-show="bForm[\'lineItemFromDate\'+$index].$error.required">填寫開始時間</div>\n' +
         '                                                </div>\n' +

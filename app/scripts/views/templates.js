@@ -65,7 +65,7 @@ angular.module('admanager.templates', []).run(['$templateCache', function($templ
         '                                        <div class="form-group">\n' +
         '                                            <label class="control-label col-sm-2" for="{{ \'lineItemFromDate\' + $index }}">開始時間</label>\n' +
         '                                            <div class="col-sm-10">\n' +
-        '                                                <input type="text" class="form-control" name="{{ \'lineItemFromDate\' + $index }}" ng-model="lineItem.fromDate" max-date="{{ lineItem.toDate }}" start-date="{{ lineItem.currentDateValue.toString() }}" start-week="1" placeholder="From" bs-datepicker required>\n' +
+        '                                                <input type="text" class="form-control" name="{{ \'lineItemFromDate\' + $index }}" ng-model="lineItem.fromDate" min-date="today" max-date="{{ lineItem.toDate }}" start-date="{{ lineItem.currentDateValue.toString() }}" start-week="1" placeholder="From" bs-datepicker required>\n' +
         '                                                <div ng-show="bForm.$submitted || bForm[\'lineItemFromDate\'+$index].$touched">\n' +
         '                                                    <div class="error" ng-show="bForm[\'lineItemFromDate\'+$index].$error.required">填寫開始時間</div>\n' +
         '                                                </div>\n' +
