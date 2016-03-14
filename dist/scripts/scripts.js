@@ -60,6 +60,97 @@ angular.module('bhAdManager', [
 'use strict';
 
 /**
+ * @ngdoc service
+ * @name bhAdManager.bhAdResources
+ * @description
+ * # bhAdResources
+ * Service in the bhAdManager.
+ */
+angular.module('bhAdManager')
+    .service('bhAdResources', ['$http', '$log', function bhAdResources($http, $log) {
+        return {
+            getGanttData: function() {
+                return $http({
+                    url: '/gantt/ajax/load',
+                    method: 'GET',
+                    responseType: 'json',
+                    timeout: 5000,
+                });
+            },
+            updateDfp: function() {
+                return $http({
+                    url: '/gantt/ajax/updateDFP',
+                    method: 'GET',
+                    responseType: 'json',
+                });
+            },
+            updateTask: function(data) {
+                return $http({
+                    url: '/gantt/ajax/updateTask',
+                    method: 'POST',
+                    data: data,
+                    responseType: 'json',
+                    timeout: 5000,
+                });
+            },
+            getOrder: function(orderId) {
+                return $http({
+                    url: '/dfp/orders/' + orderId,
+                    method: 'GET',
+                    responseType: 'json',
+                    timeout: 5000,
+                });
+            },
+            getBooking: function(bookingId) {
+                return $http({
+                    url: '/booking/' + bookingId,
+                    method: 'GET',
+                    responseType: 'json',
+                    timeout: 5000,
+                });
+            },
+            createBooking: function(bookingData) {
+                return $http({
+                    url: '/booking/create',
+                    method: 'POST',
+                    data: bookingData,
+                    responseType: 'json',
+                    timeout: 5000,
+                });
+            },
+            updateBooking: function(bookingId, bookingData) {
+                return $http({
+                    url: '/booking/' + bookingId + '/update',
+                    data: bookingData,
+                    method: 'PUT',
+                    responseType: 'json',
+                    timeout: 5000,
+                });
+            },
+            deleteBooking: function(bookingId, bookingData) {
+                return $http({
+                    url: '/booking/' + bookingId + '/delete',
+                    data: bookingData,
+                    method: 'DELETE',
+                    responseType: 'json',
+                    timeout: 5000,
+                });
+            },
+            syncingToDFP: function(bookingId, bookingData) {
+                return $http({
+                    url: '/booking/' + bookingId + '/syncingToDFP',
+                    data: bookingData,
+                    method: 'POST',
+                    responseType: 'json',
+                });
+            }
+        };
+    }])
+;
+
+'use strict';
+
+/**
  * @ngdoc function
  * @name bhAdManager.controller:MainCtrl
  * @description
@@ -69,8 +160,8 @@ angular.module('bhAdManager', [
 var environment = "TEST";
 
 angular.module('bhAdManager')
-    .controller('MainCtrl', ['$scope', '$timeout', '$log', 'ganttUtils', 'GanttObjectModel', 'Sample', 'ganttMouseOffset', 'ganttDebounce', 'moment', '$modal', '$popover', '$http', '$sce', '$alert', '$rootScope', '$aside',
-        function($scope, $timeout, $log, utils, ObjectModel, Sample, mouseOffset, debounce, moment, $modal, $popover, $http, $sce, $alert, $rootScope, $aside) {
+    .controller('MainCtrl', ['$scope', '$timeout', '$log', 'ganttUtils', 'GanttObjectModel', 'bhAdResources', 'Sample', 'ganttMouseOffset', 'ganttDebounce', 'moment', '$modal', '$popover', '$http', '$sce', '$alert', '$rootScope', '$aside', '$q',
+        function($scope, $timeout, $log, utils, ObjectModel, bhAdResources, Sample, mouseOffset, debounce, moment, $modal, $popover, $http, $sce, $alert, $rootScope, $aside, $q) {
             var objectModel;
             var dataToRemove;
             $scope.orders = undefined;
@@ -113,7 +204,7 @@ angular.module('bhAdManager')
                 contextMenuOptions:{
                     'task':
                         [['更新booking資料', function ($itemScope, $event, model) {
-                            $scope.handleBooking(model);
+                            $scope.handleUpdateBooking(model);
                         },function ($itemScope, $event, model) {
                             if (model.status === 'BOOKING') {
                                 return true;
@@ -126,6 +217,12 @@ angular.module('bhAdManager')
                             changeColorAside.$promise.then(function() {
                                 changeColorAside.show();
                             });
+                        },function(itemScoep, $event, model) {
+                            if (model.status === 'BOOKING') {
+                                return false;
+                            }else {
+                                return true;
+                            }
                         }]
                         ],
                     // 'rowLabel':
@@ -362,19 +459,16 @@ angular.module('bhAdManager')
                         $scope.orders = response.ganttData.orders;
                     });
                 } else {
-                    $http({
-                        method: 'GET',
-                        url: '/gantt/ajax/load'
-                    }).then(function(response) {
+                    bhAdResources.getGanttData().then(function(response) {
                         if (response.data.status === 'ok') {
                             getReady(response.data.ganttData.data);
                             $scope.options.updateTime = response.data.ganttData.updateTime;
                             $scope.orders = response.data.ganttData.orders;
                         } else {
-                            alert('Load Data Error');
+                            $rootScope.$emit('handleAlert',{message: 'Load Data Error!', type: 'danger'});
                         }
                     }, function(response) {
-                        alert('Load Data Error');
+                        $rootScope.$emit('handleAlert',{message: 'Load Data Error!', type: 'danger'});
                     });
                 }
                 dataToRemove = undefined;
@@ -398,19 +492,16 @@ angular.module('bhAdManager')
                         $scope.data = response.data;
                     });
                 } else {
-                    $http({
-                        method: 'GET',
-                        url: '/gantt/ajax/updateDFP'
-                    }).then(function(response) {
+                    bhAdResources.updateDfp().then(function(response) {
                         if (response.data.status === 'ok') {
                             $scope.updateLoading = true;
-                            alert('Update Data Success.');
+                            $rootScope.$emit('handleAlert',{message: 'Update Data Success!', type: 'success.'});
                             $scope.reload();
                         } else {
-                            alert('Update Data Error');
+                            $rootScope.$emit('handleAlert',{message: 'Update Data Error!', type: 'danger'});
                         }
                     }, function(response) {
-                        alert('Update Data Error');
+                        $rootScope.$emit('handleAlert',{message: 'Update Data Error!', type: 'danger'});
                     });
                 }
             };
@@ -421,39 +512,22 @@ angular.module('bhAdManager')
                     changeColor($scope.changeColorModel.orderId, $scope.changeColorModel.color);
                     $scope.options.isLoading = false;
                     $scope.changeColorModel = undefined;
-
-                    $alert({
-                        title: 'Success!',
-                        content: '顏色更新成功',
-                        type: 'success',
-                        keyboard: true,
-                        show: true
-                    });
+                    $rootScope.$emit('handleAlert',{message: '顏色更新成功!', type: 'success'});
                     changeColorAside.hide();
                 } else {
-                    $http({
-                        method: 'POST',
-                        url: '/gantt/ajax/updateTask',
-                        data: $scope.changeColorModel
-                    }).then(function(response) {
+                    bhAdResources.updateTask($scope.changeColorModel).then(function(response) {
                         if (response.data.status === 'ok') {
                             changeColor($scope.changeColorModel.orderId, $scope.changeColorModel.color);
                             $scope.options.isLoading = false;
                             $scope.changeColorModel = undefined;
                             changeColorAside.hide();
-                            $alert({
-                                title: 'Success!',
-                                content: '顏色更新成功',
-                                type: 'success',
-                                keyboard: true,
-                                show: true
-                            });
+                            $rootScope.$emit('handleAlert',{message: '顏色更新成功!', type: 'success'});
 
                         } else {
-                            alert('Update Data Error');
+                            $rootScope.$emit('handleAlert',{message: 'Update Data Error!', type: 'danger'});
                         }
                     }, function(response) {
-                        alert('Update Data Error');
+                        $rootScope.$emit('handleAlert',{message: 'Update Data Error!', type: 'danger'});
                     });
                 }
             };
@@ -494,14 +568,33 @@ angular.module('bhAdManager')
 
             $scope.handleSelectOrder = function(orderId){
                 $scope.options.filterTask = {orderId: orderId, id: ''};
-                $scope.selectedOrder = $scope.orders[orderId];
+                if (environment === 'TEST') {　
+                    Sample.getSampleOrder().success(function(response) {
+                        $scope.selectedOrder = response.data;
+                    });
+                }else {
+                    bhAdResources.getOrder(orderId).then(function(response) {
+                        if (response.data.status === 'ok') {
+                            $scope.selectedOrder = response.data;
+                        } else {
+                            $rootScope.$emit('handleAlert',{message: 'Get Order Data Error!', type: 'danger'});
+                        }
+                    }, function(response) {
+                        $rootScope.$emit('handleAlert',{message: 'Get Order Data Error!', type: 'danger'});
+                    });
+                }
                 $scope.selectedLineItem = undefined;
             };
 
             $scope.handleSelectLineItem = function(orderId,lineItemId) {
                 if ($scope.selectedLineItem === undefined) {
                     $scope.options.filterTask.id = lineItemId;
-                    $scope.selectedLineItem =  $scope.orders[orderId].lineItems[lineItemId];
+                    if (environment === 'TEST') {　
+                        var lineItemFirst =  Object.keys($scope.selectedOrder.lineItems)[0];
+                        $scope.selectedLineItem = $scope.selectedOrder.lineItems[lineItemFirst]
+                    } else {
+                        $scope.selectedLineItem = $scope.selectedOrder.lineItems[lineItemId];
+                    }
                     for (var i = 0; i <  $scope.selectedLineItem.creatives.length; i++) {
                         if ($scope.selectedLineItem.creatives[i].previewUrl !== undefined || $scope.selectedLineItem.creatives[i].previewUrl !== '') {
                             $scope.selectedLineItem.creatives[i].iframeUrl = $sce.trustAsResourceUrl(angular.copy($scope.selectedLineItem.creatives[i].previewUrl));
@@ -509,27 +602,17 @@ angular.module('bhAdManager')
                     }
                     $scope.options.tabSelected = 'gantt';
                 }
-
             };
 
-            $scope.resizeIframe
             $scope.handleInit = function(){
                 $scope.options.filterTask = {orderId: '', id: ''};
                 $scope.selectedOrder =  undefined;
                 $scope.selectedLineItem = undefined;
                 $scope.options.tabSelected = 'gantt';
             };
-
-            $scope.handleBooking = function(editOrderData) {
-                $log.info('handleBooking');
+            $scope.createBooking = function() {
                 var $bookingFormScope = $scope.$new(true);
                 $bookingFormScope.ganttData = $scope.data;
-                if (editOrderData !== undefined) {
-                    $bookingFormScope.editOrderData = editOrderData;
-                }else {
-                    $bookingFormScope.editOrderData = undefined;
-                }
-
                 $scope._bookingForm = $modal({
                     scope: $bookingFormScope,
                     title: '新增委刊單',
@@ -540,6 +623,33 @@ angular.module('bhAdManager')
                 $scope._bookingForm.$promise.then($scope._bookingForm.show);
             };
 
+            $scope.handleUpdateBooking = function(editBookingData) {
+                $log.info('handleUpdateBooking');
+                var bookingAjax;
+                if (environment === 'TEST') {
+                    bookingAjax = Sample.getSampleBooking();
+                } else {
+                    bookingAjax = bhAdResources.getBooking(editBookingData.bookingId);
+                }
+
+                var $bookingFormScope = $scope.$new(true);
+                $bookingFormScope.ganttData = $scope.data;
+
+                bookingAjax.then(function(response) {
+                    $bookingFormScope.editBookingData = response.data.data;
+                    $scope._bookingForm = $modal({
+                        scope: $bookingFormScope,
+                        title: '新增委刊單',
+                        content: 'Prepare your gantt data, please wait one moment...',
+                        templateUrl: '../app/scripts/views/bookingForm.tpl.html',
+                        show: false,
+                    });
+                    $scope._bookingForm.$promise.then($scope._bookingForm.show);
+                },function(){
+                    $rootScope.$emit('handleAlert',{message: 'get Booking Data Error!', type: 'danger'});
+                });
+            };
+
             $rootScope.$on('filterOrderId', function(event, taskModel) {
                 $scope.options.filterTask.orderId = taskModel.orderId;
                 $scope.selectedOrder = angular.copy(taskModel);
@@ -547,36 +657,25 @@ angular.module('bhAdManager')
 
             $rootScope.$on('deleteBooking', function(event, args) {
                 // delete Orders.
-                if (args.deleteOrderId !== undefined) {
-                    var deleteOrderId = args.deleteOrderId;
+                if (args.deleteBookingId !== undefined) {
+                    var deleteBookingId = args.deleteBookingId;
                 }
                 if (args.reload === false) {
                     for (var i = 0; i < $scope.data.length; i++) {
                         if ($scope.data[i].tasks.length > 0) {
                             for (var j = 0; j < $scope.data[i].tasks.length; j++) {
-                                 if ($scope.data[i].tasks[j].orderId === deleteOrderId) {
+                                 if ($scope.data[i].tasks[j].bookingId === deleteBookingId) {
                                     $scope.data[i].tasks.splice(j, 1);
                                  }
                             };
                         }
 
                     };
-                    $alert({
-                        title: 'Success!',
-                        content: 'Deleted Booking order success!',
-                        type: 'success',
-                        duration: 5,
-                        show: true
-                    });
+                    $rootScope.$emit('handleAlert',{message: 'Deleted Booking order success!', type: 'success'});
                 }else {
                     $scope.reload();
-                    $alert({
-                        title: 'Success!',
-                        content: 'Deleted Booking order success!',
-                        type: 'success',
-                        duration: 5,
-                        show: true
-                    });
+                    $rootScope.$emit('handleAlert',{message: 'Deleted Booking order success!', type: 'success'});
+
                 }
             });
             $rootScope.$on('reload', function(event, args) {
@@ -604,14 +703,29 @@ angular.module('bhAdManager')
                     };
                 }else {
                     $scope.reload();
-                    $alert({
-                        title: 'Success!',
-                        content: 'Booking order success!',
-                        type: 'success',
-                        duration: 5,
-                        show: true
-                    });
                 }
+                $rootScope.$emit('handleAlert',{message: 'Booking order success!', type: 'success'});
+            });
+
+            $rootScope.$on('handleAlert', function(event, args) {
+                var type = 'success';
+                var message = args.message;
+                var duration = 10;
+                if (args.type !== undefined) {
+                    type = args.type;
+                }
+
+                if (args.duration !== undefined) {
+                    duration = args.duration;
+                }
+
+                $alert({
+                    title: type.charAt(0).toUpperCase() + type.slice(1) + '!',
+                    content: message,
+                    type: type,
+                    duration: duration,
+                    show: true
+                });
             });
         }
     ]);
@@ -839,8 +953,8 @@ angular.module('bhAdManager')
  */
 
 angular.module('bhAdManager')
-    .controller('bookingForm', ['$scope', '$timeout', '$log', 'moment', '$modal', '$http', '$alert', '$rootScope', '$filter', '$popover',
-        function($scope, $timeout, $log, moment, $modal, $http, $alert, $rootScope, $filter, $popover) {
+    .controller('bookingForm', ['$scope', '$timeout', '$log', 'moment', '$modal', '$http', 'bhAdResources', '$alert', '$rootScope', '$filter', '$popover',
+        function($scope, $timeout, $log, moment, $modal, $http, bhAdResources, $alert, $rootScope, $filter, $popover) {
             var defaultLineItem = {
                 id: undefined,
                 name: undefined,
@@ -850,70 +964,45 @@ angular.module('bhAdManager')
             };
 
             $scope.bookingForm = {
-                orderId: undefined,
+                bookingId: undefined,
                 isEdit: false,
                 orderName: undefined,
                 orderColor: undefined,
                 lineItems: [],
             };
-
-
-            var filterOrderLineItems = function() {
-                var ganttData = $scope.ganttData;
-                var tasks = [];
-                var filterTask = {
-                    orderId: $scope.editOrderData.orderId,
-                }
-
-                for (var i = 0; i < ganttData.length; i++) {
-                    if (ganttData[i].tasks !== undefined && ganttData[i].tasks.length > 0) {
-                        for (var j = 0; j < ganttData[i].tasks.length; j++) {
-                            var task = angular.copy(ganttData[i].tasks[j]);
-                            task.adUnitId = ganttData[i].id;
-                            tasks.push(task);
-                        };
-                    }
-                };
-                return $filter('filter')(tasks, filterTask, true);
-            }
-
             // Is Edit Form
-            if ($scope.editOrderData !== undefined) {
-                var filterLineItems = filterOrderLineItems();
-                var lineItems = [];
-                for (var i = 0; i < filterLineItems.length; i++) {
-                    var item = angular.copy(defaultLineItem);
-                    item.id = filterLineItems[i].id;
-                    item.name = filterLineItems[i].lineItemName;
-                    item.adUnits = filterLineItems[i].adUnitId;
-                    item.fromDate = filterLineItems[i].from;
-                    item.toDate = filterLineItems[i].to;
-                    lineItems.push(item);
-                };
+            if ($scope.editBookingData !== undefined) {
                 $scope.bookingForm = {
                     isEdit: true,
-                    orderId: $scope.editOrderData.orderId,
-                    orderName: $scope.editOrderData.orderName,
-                    orderColor: $scope.editOrderData.color,
-                    lineItems: lineItems,
+                    bookingId: $scope.editBookingData.id,
+                    orderName: $scope.editBookingData.orderName,
+                    orderColor: $scope.editBookingData.orderColor,
+                    lineItems: $scope.editBookingData.lineItems,
                 }
 
-                $scope.popover = {title: '請確認是否刪除?', content: '確認是否刪除booking項目'};
-                var asAServiceOptions = {
-                    title: $scope.popover.title,
-                    content: $scope.popover.content,
+                var deleteBookingOptions = {
+                    title: '請確認是否刪除',
+                    content: '確認是否刪除booking項目',
+                    templateUrl: '../app/scripts/views/confirmForm.tpl.html',
+                    trigger: 'manual',
+                    placement: 'top'
+                };
+
+                var SyncingDfpOptions = {
+                    title: '確認同步到DFP',
+                    content: '確認是否同步到DFP?',
                     templateUrl: '../app/scripts/views/confirmForm.tpl.html',
                     trigger: 'manual',
                     placement: 'top'
                 };
                 $timeout(function() {
-                    $scope.myPopover = $popover(angular.element(document.querySelector('#handle-delete-booking')), asAServiceOptions);
+                    $scope.myPopover = {
+                        handleDeleteBooking: $popover(angular.element(document.querySelector('#handle-delete-booking')), deleteBookingOptions),
+                        handleSyncingToDFP: $popover(angular.element(document.querySelector('#handle-sycing-dfp')), SyncingDfpOptions),
+                    }
                 });
 
             }
-
-
-
 
             $scope.handleAddLineItem = function() {
                 if ($scope.bForm !== undefined) {
@@ -926,17 +1015,17 @@ angular.module('bhAdManager')
                 if ($scope.bookingForm.lineItems.length > 1) {
                     $scope.bookingForm.lineItems.splice(index, 1);
                 } else {
-                    alert('必須至少一個委刊巷');
+                    $rootScope.$emit('handleAlert',{message: '必須至少一個委刊項目!', type: 'danger'});
                 }
             }
 
             $scope.handlePopoverConfirm = function(action, $event) {
-                if ($scope.myPopover !== undefined) {
-                    $scope.myPopover.$promise.then(function() {
-                        $scope.myPopover.$scope.saved = function($event) {
+                if ($scope.myPopover[action] !== undefined) {
+                    $scope.myPopover[action].$promise.then(function() {
+                        $scope.myPopover[action].$scope.saved = function($event) {
                             $scope[action]();
                         };
-                        $scope.myPopover.toggle();
+                        $scope.myPopover[action].toggle();
                     });
                 }
             };
@@ -945,7 +1034,7 @@ angular.module('bhAdManager')
                 $log.info('handleDeleteBooking');
                 if (environment === 'TEST') {
                     $scope.$hide();
-                    $rootScope.$emit('deleteBooking', {deleteOrderId: $scope.bookingForm.orderId, reload: false});
+                    $rootScope.$emit('deleteBooking', {deleteBookingId: $scope.bookingForm.bookingId, reload: false});
                 } else {
                     deleteBooking();
                 }
@@ -956,7 +1045,7 @@ angular.module('bhAdManager')
                 if (vaildationBookingForm($scope.bookingForm) !== false ){
                     if (environment === 'TEST') {
                         var newTaskDatas = [];
-                        var orderId = uuid();
+                        var bookingId = uuid();
                         for (var i = 0; i < $scope.bookingForm.lineItems.length; i++) {
                             var taskData = {
                                 ad_unit_id: $scope.bookingForm.lineItems[i].adUnits,
@@ -969,7 +1058,7 @@ angular.module('bhAdManager')
                                 orderName: $scope.bookingForm.orderName,
                                 status: "BOOKING",
                                 id: uuid(),
-                                orderId: orderId,
+                                bookingId: bookingId,
                                 tooltipsContent: []
                             }
                             newTaskDatas.push(taskData);
@@ -984,20 +1073,20 @@ angular.module('bhAdManager')
                         saveBooking();
                     }
                 }　else {
-                    alert('請檢查資料是否填寫正確');
+                    $rootScope.$emit('handleAlert',{message: '請檢查資料是否填寫正確!', type: 'danger'});
                 }
             }
             $scope.handleSyncingToDFP = function() {
                 $log.info('handleSyncingToDFP');
                 if (vaildationBookingForm($scope.bookingForm) !== false ){
                     if (environment === 'TEST') {
-                        alert('Test Success to DFP');
+                        $rootScope.$emit('handleAlert',{message: 'Test Success to DFP!', type: 'success'});
                         $scope.$hide();
                     } else {
                         syncingToDFP();
                     }
                 }　else {
-                    alert('請檢查資料是否填寫正確');
+                    $rootScope.$emit('handleAlert',{message: '請檢查資料是否填寫正確!', type: 'danger'});
                 }
             };
 
@@ -1007,44 +1096,59 @@ angular.module('bhAdManager')
                     lineItem.fromDate = moment(lineItem.fromDate).format('YYYY-MM-DD HH:mm:ss');
                     lineItem.toDate = moment(lineItem.toDate).format('YYYY-MM-DD HH:mm:ss');
                 });
-                $http({
-                    method: $scope.bookingForm.isEdit === true ? 'PUT': 'POST',
-                    url: '/gantt/ajax/saveBooking',
-                    data: bookingForm
-                }).then(function(response) {
-                    if (response.data.status === 'ok') {
-                        $scope.$hide();
-                        $rootScope.$emit('addTasks', {reload: true});
-                    } else {
-                       if (response.data.message !== undefined) {
-                            alert(response.data.message);
-                        }else {
-                            alert('Save Order Data Error');
+                if ($scope.bookingForm.isEdit === true) {
+                    bhAdResources.updateBooking(bookingForm.bookingId, bookingForm).then(function(response) {
+                        if (response.data.status === 'ok') {
+                            $scope.$hide();
+                            $rootScope.$emit('addTasks', {reload: true});
+                        } else {
+                           if (response.data.message !== undefined) {
+                                $rootScope.$emit('handleAlert',{message: response.data.message, type: 'danger'});
+                            }else {
+                                $rootScope.$emit('handleAlert',{message: 'Save Order Data Error!', type: 'danger'});
+                            }
                         }
-                    }
-                }, function(response) {
-                       if (response.data.message !== undefined) {
-                            alert(response.data.message);
-                        }else {
-                            alert('Save Order Data Error');
+                    }, function(response) {
+                           if (response.data.message !== undefined) {
+                                $rootScope.$emit('handleAlert',{message: response.data.message, type: 'danger'});
+                            }else {
+                                $rootScope.$emit('handleAlert',{message: 'Save Order Data Error.', type: 'danger'});
+                            }
+                    });
+                }else {
+                   bhAdResources.createBooking(bookingForm).then(function(response) {
+                        if (response.data.status === 'ok') {
+                            $scope.$hide();
+                            $rootScope.$emit('addTasks', {reload: true});
+                        } else {
+                           if (response.data.message !== undefined) {
+                                $rootScope.$emit('handleAlert',{message: response.data.message, type: 'danger'});
+                            }else {
+                                $rootScope.$emit('handleAlert',{message: 'Save Order Data Error!', type: 'danger'});
+                            }
                         }
-                });
+                    }, function(response) {
+                           if (response.data.message !== undefined) {
+                                $rootScope.$emit('handleAlert',{message: response.data.message, type: 'danger'});
+                            }else {
+                                $rootScope.$emit('handleAlert',{message: 'Save Order Data Error.', type: 'danger'});
+                            }
+                    });
+                }
+
             }
 
             var deleteBooking = function() {
-                $http({
-                    method: 'DELETE',
-                    url: '/gantt/ajax/deleteBooking',
-                    data: $scope.bookingForm
-                }).then(function(response) {
+                bhAdResources.deleteBooking($scope.bookingForm.bookingId, $scope.bookingForm).then(function(response) {
                     if (response.data.status === 'ok') {
                         $scope.$hide();
-                        $rootScope.$emit('deleteBooking', {deleteOrderId: $scope.bookingForm.orderId, reload: false});
+                        $rootScope.$emit('deleteBooking', {deleteBookingId: $scope.bookingForm.bookingId, reload: false});
                     } else {
-                        alert('Delete Order Data Error');
+                        $rootScope.$emit('handleAlert',{message: 'Delete Order Data Error.', type: 'danger'});
                     }
                 }, function(response) {
-                     alert('Delete Order Data Error');
+                    $rootScope.$emit('handleAlert',{message: 'Delete Order Data Error.', type: 'danger'});
+
                 });
             };
 
@@ -1055,27 +1159,25 @@ angular.module('bhAdManager')
                     lineItem.toDate = moment(lineItem.toDate).format('YYYY-MM-DD HH:mm:ss');
                 });
                 $rootScope.$emit('isLoading', true);
-                $http({
-                    method: 'POST',
-                    url: '/gantt/ajax/syncingToDFP',
-                    data: bookingForm
-                }).then(function(response) {
+                bhAdResources.syncingToDFP(bookingForm.bookingId, bookingForm).then(function(response) {
                     if (response.data.status === 'ok') {
                         $scope.$hide();
                         $rootScope.$emit('reload', true);
+                        $rootScope.$emit('handleAlert',{message: 'Syncing To DFP Success.', type: 'success'});
+
                     } else {
                        if (response.data.message !== undefined) {
-                            alert(response.data.message);
+                             $rootScope.$emit('handleAlert',{message: response.data.message, type: 'danger'});
                         }else {
-                            alert('Save Order Data Error');
+                            $rootScope.$emit('handleAlert',{message: 'Syncing To DFP Error.', type: 'danger'});
                         }
                         $rootScope.$emit('isLoading', false);
                     }
                 }, function(response) {
                    if (response.data.message !== undefined) {
-                        alert(response.data.message);
+                        $rootScope.$emit('handleAlert',{message: response.data.message, type: 'danger'});
                     }else {
-                        alert('Save Order Data Error');
+                        $rootScope.$emit('handleAlert',{message: 'Syncing To DFP Error.', type: 'danger'});
                     }
                     $rootScope.$emit('isLoading', false);
                 });
@@ -1219,9 +1321,9 @@ angular.module('admanager.templates', []).run(['$templateCache', function($templ
         '                </div>\n' +
         '                <div class="modal-footer">\n' +
         '                <div class="form-actions">\n' +
-        '                    <button id="handle-delete-booking" ng-if="editOrderData" class="btn btn-danger" ng-click="handlePopoverConfirm(\'handleDeleteBooking\', $event)"><i class="glyphicon glyphicon-trash"></i>Delete</button>\n' +
+        '                    <button id="handle-delete-booking" ng-if="bookingForm.isEdit" class="btn btn-danger" ng-click="handlePopoverConfirm(\'handleDeleteBooking\', $event)"><i class="glyphicon glyphicon-trash"></i>Delete</button>\n' +
         '                    <button class="btn btn-primary" type="submit" ng-click="handleSaveBooking()">儲存 Booking</button>\n' +
-        '                    <button ng-if="editOrderData !== undefined" class="btn btn-success" type="submit" ng-click="handleSyncingToDFP()">傳送到DFP</button>\n' +
+        '                    <button id="handle-sycing-dfp" ng-if="bookingForm.isEdit" class="btn btn-success" type="submit" ng-click="handlePopoverConfirm(\'handleSyncingToDFP\', $event)">同步到DFP</button>\n' +
         '                </div>\n' +
         '\n' +
         '\n' +

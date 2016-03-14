@@ -135,7 +135,7 @@ textarea.live-row {
 }
 
 .isDraft .gantt-task-background{
-    background-color: gray !important;
+    /*background-color: gray !important;*/
 }
 
 .tooltip-content {
@@ -229,6 +229,22 @@ textarea.live-row {
     outline: 0;
 }
 
-.breadcrumb li{
+.breadcrumb li {
     float: left;
+}
+
+#alerts-container {
+    position: absolute;
+    z-index: 9999;
+    right: 30px;
+    bottom :20px;
+    min-width: 300px;
+}
+
+#handle-sycing-dfp {
+    margin-left: 45px;
+}
+
+.dropdown-menu .disabled {
+    display: none;
 }

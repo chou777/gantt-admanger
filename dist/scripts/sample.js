@@ -18,6 +18,22 @@ angular.module('bhAdManager')
                     timeout: 1000,
                 });
             },
+            getSampleOrder: function() {
+                return $http({
+                    url: '/data/order.json',
+                    type: 'get',
+                    responseType: 'json',
+                    timeout: 1000,
+                });
+            },
+            getSampleBooking: function() {
+                return $http({
+                    url: '/data/booking.json',
+                    type: 'get',
+                    responseType: 'json',
+                    timeout: 1000,
+                });
+            }
         };
     }])
 ;
