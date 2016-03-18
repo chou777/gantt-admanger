@@ -111,6 +111,7 @@ angular.module('bhAdManager')
                     orderId: undefined,
                     status: undefined,
                     id: undefined,
+                    isArchived: false,
                 },
                 filterRow: '',
                 filterTaskStatusOptions: [
@@ -307,6 +308,12 @@ angular.module('bhAdManager')
                         getReady(response.ganttData.data);
                         $scope.options.updateTime = response.ganttData.updateTime;
                         $scope.orders = response.ganttData.orders;
+                        $scope.dfpNetworkCode = response.ganttData.dfpNetworkCode;
+                        $scope.dfpEndPoint = 'https://www.google.com/dfp/main?networkCode=' + $scope.dfpNetworkCode +'#delivery/';
+
+                        Sample.getSamplatUsers().success(function(response) {
+                            $scope.traffickerUsers = response.data;
+                        });
                     });
                 } else {
                     bhAdResources.getGanttData().then(function(response) {
@@ -314,9 +321,19 @@ angular.module('bhAdManager')
                             getReady(response.data.ganttData.data);
                             $scope.options.updateTime = response.data.ganttData.updateTime;
                             $scope.orders = response.data.ganttData.orders;
+                            $scope.dfpNetworkCode = response.data.ganttData.dfpNetworkCode;
+                            $scope.dfpEndPoint = 'https://www.google.com/dfp/main?networkCode=' + $scope.dfpNetworkCode +'#delivery/';
+                            bhAdResources.getTraffickerUsers().then(function(response) {
+                                $scope.traffickerUsers = response.data.data;
+
+                            }, function(response) {
+                                $rootScope.$emit('handleAlert',{message: 'Get Trafficker Users Data Error!', type: 'danger'});
+                            });
                         } else {
                             $rootScope.$emit('handleAlert',{message: 'Load Data Error!', type: 'danger'});
                         }
+
+
                     }, function(response) {
                         $rootScope.$emit('handleAlert',{message: 'Load Data Error!', type: 'danger'});
                     });
@@ -338,13 +355,13 @@ angular.module('bhAdManager')
                 $scope.updateLoading = true;
                 $scope.options.isLoading = true;
                 if (environment === 'TEST') {
-                    Sample.getSampleData().success(function(response) {
-                        $scope.data = response.data;
-                    });
+                    $rootScope.$emit('handleAlert',{message: 'Update Data Success!', type: 'success.'});
+                    $scope.updateLoading = false;
+                    $scope.reload();
                 } else {
                     bhAdResources.updateDfp().then(function(response) {
                         if (response.data.status === 'ok') {
-                            $scope.updateLoading = true;
+                            $scope.updateLoading = false;
                             $rootScope.$emit('handleAlert',{message: 'Update Data Success!', type: 'success.'});
                             $scope.reload();
                         } else {
@@ -425,7 +442,7 @@ angular.module('bhAdManager')
                 }else {
                     bhAdResources.getOrder(orderId).then(function(response) {
                         if (response.data.status === 'ok') {
-                            $scope.selectedOrder = response.data;
+                            $scope.selectedOrder = response.data.data;
                         } else {
                             $rootScope.$emit('handleAlert',{message: 'Get Order Data Error!', type: 'danger'});
                         }
@@ -455,13 +472,14 @@ angular.module('bhAdManager')
             };
 
             $scope.handleInit = function(){
-                $scope.options.filterTask = {orderId: '', id: ''};
+                $scope.options.filterTask = {};
                 $scope.selectedOrder =  undefined;
                 $scope.selectedLineItem = undefined;
                 $scope.options.tabSelected = 'gantt';
             };
             $scope.createBooking = function() {
                 var $bookingFormScope = $scope.$new(true);
+                $bookingFormScope.traffickerUsers = $scope.traffickerUsers;
                 $bookingFormScope.ganttData = $scope.data;
                 $scope._bookingForm = $modal({
                     scope: $bookingFormScope,
@@ -483,10 +501,11 @@ angular.module('bhAdManager')
                 }
 
                 var $bookingFormScope = $scope.$new(true);
-                $bookingFormScope.ganttData = $scope.data;
 
                 bookingAjax.then(function(response) {
+                    $bookingFormScope.ganttData = $scope.data;
                     $bookingFormScope.editBookingData = response.data.data;
+                    $bookingFormScope.traffickerUsers = $scope.traffickerUsers;
                     $scope._bookingForm = $modal({
                         scope: $bookingFormScope,
                         title: '新增委刊單',
@@ -499,6 +518,42 @@ angular.module('bhAdManager')
                     $rootScope.$emit('handleAlert',{message: 'get Booking Data Error!', type: 'danger'});
                 });
             };
+            $scope.redirectEditOrder = function(orderId) {
+                var editPath = $scope.dfpEndPoint + 'OrderDetail/orderId=' + orderId;
+                window.open(editPath, '_blank');
+                updateDfpNotification();
+            };
+            $scope.redirectEditLineItem = function(orderId, lineItemId) {
+                var editPath = $scope.dfpEndPoint + 'LineItemDetail/orderId=' + orderId + '&lineItemId=' + lineItemId;
+                window.open(editPath, '_blank');
+                updateDfpNotification();
+            };
+            $scope.redirectCreateCreative = function(orderId, lineItemId) {
+                var editPath = $scope.dfpEndPoint + 'CreateCreative/orderId=' + orderId + '&lineItemId=' + lineItemId;
+                window.open(editPath, '_blank');
+                updateDfpNotification();
+            };
+            $scope.redirectEditCreative = function(creativeId) {
+                var editPath = $scope.dfpEndPoint + 'CreativeDetail/creativeId=' + creativeId;
+                window.open(editPath, '_blank');
+                updateDfpNotification();
+            };
+
+            $scope.updateDfpForNotification = function(){
+                $scope.handleUpdateDFP();
+                $scope.checkDfpUpdateModal.$promise.then($scope.checkDfpUpdateModal.hide);
+            }
+            var updateDfpNotification = function() {
+                var $checkDfpUpdateScope = $scope.$new(true);
+                $checkDfpUpdateScope.handleUpdateDFP = $scope.updateDfpForNotification;
+                $scope.checkDfpUpdateModal = $modal({
+                    scope: $checkDfpUpdateScope,
+                    title: '確認更新DFP',
+                    templateUrl: '../app/scripts/views/checkDfpUpdate.tpl.html',
+                    show: false,
+                });
+                $scope.checkDfpUpdateModal.$promise.then($scope.checkDfpUpdateModal.show);
+            }
 
             $rootScope.$on('filterOrderId', function(event, taskModel) {
                 $scope.options.filterTask.orderId = taskModel.orderId;

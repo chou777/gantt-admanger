@@ -33,6 +33,22 @@ angular.module('bhAdManager')
                     responseType: 'json',
                     timeout: 1000,
                 });
+            },
+            getSamplatUsers: function() {
+                return $http({
+                    url: '/data/users.json',
+                    type: 'get',
+                    responseType: 'json',
+                    timeout: 1000,
+                });
+            },
+            getSampleCompanies: function() {
+                return $http({
+                    url: '/data/companies.json',
+                    type: 'get',
+                    responseType: 'json',
+                    timeout: 1000,
+                });
             }
         };
     }])

@@ -17,8 +17,22 @@
                                         <div class="col-sm-10">
                                             <input type="text" class="form-control" id="orderName" name="orderName" ng-model="bookingForm.orderName" required>
                                             <div ng-show="bForm.$submitted || bForm.orderName.$touched">
-                                              <div class="error" ng-show="bForm.orderName.$error.required">填寫委刊單</div>
+                                                <div class="error" ng-show="bForm.orderName.$error.required">填寫委刊單</div>
                                             </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-sm-2" for="orderName">委刊單刊登者</label>
+                                        <div class="col-sm-10">
+                                            <button type="button" class="btn btn-default" ng-model="bookingForm.traffickerUser" data-html="1" placeholder="請選擇刊登者" bs-options="tUser as tUser.email for tUser in traffickerUsers" bs-select>
+                                              Action <span class="caret"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-sm-2" for="orderName">廣告客戶</label>
+                                        <div class="col-sm-10">
+                                        <input type="text" class="form-control" ng-model="bookingForm.company" data-animation="am-flip-x" bs-options="companies as companies.name for companies in getCompanies($viewValue)" placeholder="輸入客戶名稱" bs-typeahead>
                                         </div>
                                     </div>
                                     <div class="form-group">
@@ -26,7 +40,7 @@
                                         <div class="col-sm-10">
                                             <div class="input-group col-sm-12">
                                                 <label class="input-group-addon" ng-style="{'background-color': bookingForm.orderColor}">&nbsp;&nbsp;&nbsp;&nbsp;</label>
-                                                <input type="text" class="form-control" name="orderColor"  colorpicker colorpicker-parent="true" ng-model="bookingForm.orderColor" required>
+                                                <input type="text" class="form-control" name="orderColor" colorpicker colorpicker-parent="true" ng-model="bookingForm.orderColor" required>
                                             </div>
                                             <div class="col-sm-12" ng-show="bForm.$submitted || bForm.orderColor.$touched">
                                                 <div class="error" ng-show="bForm.orderColor.$error.required">選取背景色</div>
@@ -51,11 +65,20 @@
                                         <div class="form-group">
                                             <label class="control-label col-sm-2" for="{{ 'lineItemAdUnits' + $index }}">廣告單元</label>
                                             <div class="col-sm-10">
-                                                <select name="{{ 'lineItemAdUnits' + $index }}" class="form-control"  ng-model="lineItem.adUnits" required>
+                                                <select name="{{ 'lineItemAdUnits' + $index }}" class="form-control" ng-model="lineItem.adUnits" required>
                                                     <option ng-repeat="option in ganttData track by option.id " value="{{option.id}}" ng-selected="option.id === lineItem.adUnits">{{option.name}}</option>
                                                 </select>
                                                 <div ng-show="bForm.$submitted || bForm['lineItemAdUnits'+ $index].$touched">
                                                     <div class="error" ng-show="bForm['lineItemAdUnits'+ $index].$error.required">填寫廣告單元</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-2" for="{{ 'units' + $index }}">曝光次數</label>
+                                            <div class="col-sm-10">
+                                                <input type="text" class="form-control" name="{{ 'units' + $index }}" ng-model="lineItem.units" required>
+                                                <div ng-show="bForm.$submitted || bForm['units'+$index].$touched">
+                                                    <div class="error" ng-show="bForm['units'+$index].$error.required">請填寫曝光次數(數字)</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -89,18 +112,15 @@
                                     <button class="btn btn-default" type="button" ng-click="handleAddLineItem()">新增委刊項</button>
                                 </div>
                             </div>
-
                         </form>
                     </div>
                 </div>
                 <div class="modal-footer">
-                <div class="form-actions">
-                    <button id="handle-delete-booking" ng-if="bookingForm.isEdit" class="btn btn-danger" ng-click="handlePopoverConfirm('handleDeleteBooking', $event)"><i class="glyphicon glyphicon-trash"></i>Delete</button>
-                    <button class="btn btn-primary" type="submit" ng-click="handleSaveBooking()">儲存 Booking</button>
-                    <button id="handle-sycing-dfp" ng-if="bookingForm.isEdit" class="btn btn-success" type="submit" ng-click="handlePopoverConfirm('handleSyncingToDFP', $event)">同步到DFP</button>
-                </div>
-
-
+                    <div class="form-actions">
+                        <button id="handle-delete-booking" ng-if="bookingForm.isEdit" class="btn btn-danger" ng-click="handlePopoverConfirm('handleDeleteBooking', $event)"><i class="glyphicon glyphicon-trash"></i>Delete</button>
+                        <button class="btn btn-primary" type="submit" ng-click="handleSaveBooking()">儲存 Booking</button>
+                        <button id="handle-sycing-dfp" ng-if="bookingForm.isEdit" class="btn btn-success" type="submit" ng-click="handlePopoverConfirm('handleSyncingToDFP', $event)">同步到DFP</button>
+                    </div>
                     <!-- <button type="button" class="btn btn-default" ng-click="$hide()">Close</button> -->
                 </div>
             </div>

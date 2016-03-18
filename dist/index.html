@@ -90,6 +90,15 @@
                                                     <label class="control-label"><i class="fa fa-filter"></i> 篩選廣告單元</label><br>
                                                     <input type="text" class="form-control" style="width: 8em; text-align: left" ng-model="options.filterRow">
                                                 </div>
+
+                                                <div class="form-group input-append text-center">
+                                                    <label class="control-label"><i class="fa fa-filter"></i> 顯示已封存</label><br>
+                                                    <div class="btn-group">
+                                                        <button class="btn btn-default" ng-disabled="options.filterTask.isArchived === undefined" ng-click="options.filterTask.isArchived = undefined">顯示</button>
+                                                        <button class="btn btn-default" ng-disabled="options.filterTask.isArchived === false" ng-click="options.filterTask.isArchived = false">不顯示</button>
+                                                    </div>
+                                                </div>
+
                                                 <div class="form-group text-center">
                                                     <label class="control-label"><i class="fa fa-calendar"></i> <i class="fa fa-arrows-h"></i> <i class="fa fa-calendar"></i>   時間區間</label><br>
                                                     <div class="form-group">
@@ -139,7 +148,7 @@
                       　　<li ng-if="selectedLineItem != undefined" class="active">{{selectedLineItem.name}}</li>
                     </ol>
                 </div>
-                <div class="info-wrap">
+                <div class="col-md-12">
                     <div ng-if="selectedOrder && !selectedLineItem">
                         <div class="row">
                           <div class="info-block col-md-1">
@@ -162,10 +171,16 @@
                               <div class="info-title">點擊率</div>
                               <div class="info-value">{{ selectedOrder.totalClicksDelivered / selectedOrder.totalImpressionsDelivered * 100 | number: 2}}%</div>
                           </div>
+                          <div class="info-block col-md-5"></div>
+                          <div class="info-block col-md-1"><button ng-click="redirectEditOrder(selectedOrder.id)" class="btn btn-default">編輯委刊單</button></div>
                         </div>
                     </div>
                     <div ng-if="selectedLineItem">
                         <div class="row">
+                            <div class="info-block col-md-1">
+                                <div class="info-title">名稱</div>
+                                <div class="info-value">{{ selectedLineItem.name }}</div>
+                            </div>
                             <div class="info-block col-md-1">
                                 <div class="info-title">狀態</div>
                                 <div class="info-value">{{ selectedLineItem.status }}</div>
@@ -187,11 +202,11 @@
                                 <div class="info-value">{{ selectedLineItem.valueCostPerUnit.microAmount }} {{ selectedLineItem.valueCostPerUnit.currencyCode }}&nbsp;<span style="font-size: 10px">千次曝光計價</span></div>
                             </div>
                             <div class="info-block col-md-1">
-                                <div class="info-title">目標</div>
+                                <div class="info-title">目標曝光</div>
                                 <div class="info-value">{{ selectedLineItem.primaryGoal.IMPRESSIONS }} {{ selectedLineItem.primaryGoal.units }}</div>
                             </div>
                             <div class="info-block col-md-1">
-                                <div class="info-title">目標</div>
+                                <div class="info-title">曝光放送</div>
                                 <div class="info-value">{{ selectedLineItem.stats.impressionsDelivered }}</div>
                             </div>
                             <div class="info-block col-md-1">
@@ -202,16 +217,23 @@
                                 <div class="info-title">點擊率</div>
                                 <div class="info-value">{{ ((selectedLineItem.stats.clicksDelivered / selectedLineItem.stats.impressionsDelivered) * 100) | number: 2 }}%</div>
                             </div>
+
+                            <div class="info-block col-md-2">
+                                <button ng-click="redirectEditLineItem(selectedLineItem.orderId, selectedLineItem.id)" class="btn btn-default">編輯委刊項</button>
+                                <button ng-click="redirectCreateCreative(selectedLineItem.orderId, selectedLineItem.id)" class="btn btn-default">新增廣告素材</button>
+                            </div>
                         </div>
 
                         <hr>
 
-                        <div class="source">
+                        <div class="source" ng-if="selectedLineItem.creatives.length > 0">
                             <div>廣告素材</div>
                             <div class="row">
                               <div class="col-sm-12 col-md-12"  ng-repeat="creative in selectedLineItem.creatives track by creative.id">
                                 <div class="thumbnail">
                                   <div class="caption">
+                                    <button ng-click="redirectEditCreative(creative.id)" class="btn btn-default">編輯廣告素材</button>
+
                                     <div>ID: {{ creative.id }}</div>
                                     <div> <span>名稱：{{ creative.name }}</span> / <span>尺寸: ({{ creative.size.width }} X {{ creative.size.height }} px)</span></div>
                                     <div>連結:　<a target="_blank" href="{{ creative.destinationUrl }}">{{ creative.destinationUrl }}</a></div>

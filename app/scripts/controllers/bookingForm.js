@@ -9,15 +9,18 @@
  */
 
 angular.module('bhAdManager')
-    .controller('bookingForm', ['$scope', '$timeout', '$log', 'moment', '$modal', '$http', 'bhAdResources', '$alert', '$rootScope', '$filter', '$popover',
-        function($scope, $timeout, $log, moment, $modal, $http, bhAdResources, $alert, $rootScope, $filter, $popover) {
+    .controller('bookingForm', ['$scope', '$timeout', '$log', 'moment', '$modal', '$http', 'Sample' ,'bhAdResources', '$alert', '$rootScope', '$filter', '$popover', '$q',
+        function($scope, $timeout, $log, moment, $modal, $http, Sample, bhAdResources, $alert, $rootScope, $filter, $popover, $q) {
             var defaultLineItem = {
                 id: undefined,
                 name: undefined,
+                units: 0,
                 adUnits: undefined,
                 fromDate: undefined,
                 toDate: undefined,
             };
+            // DFP Users tree;
+            $scope.traffickerUsers;
 
             $scope.bookingForm = {
                 bookingId: undefined,
@@ -25,6 +28,8 @@ angular.module('bhAdManager')
                 orderName: undefined,
                 orderColor: undefined,
                 lineItems: [],
+                traffickerUser: undefined,
+                company: undefined,
             };
             // Is Edit Form
             if ($scope.editBookingData !== undefined) {
@@ -34,6 +39,8 @@ angular.module('bhAdManager')
                     orderName: $scope.editBookingData.orderName,
                     orderColor: $scope.editBookingData.orderColor,
                     lineItems: $scope.editBookingData.lineItems,
+                    traffickerUser: $scope.editBookingData.traffickerUser,
+                    company: $scope.editBookingData.company
                 }
 
                 var deleteBookingOptions = {
@@ -59,7 +66,30 @@ angular.module('bhAdManager')
                 });
 
             }
+            var getCompaniesTimeout;
+            $scope.getCompanies = function(viewValue) {
+                var deferred = $q.defer();
+                var params = {search: viewValue};
 
+                $timeout.cancel(getCompaniesTimeout);
+
+                getCompaniesTimeout = $timeout(function() {
+                    if (environment === 'TEST') {
+                        var ajaxCompanies = Sample.getSampleCompanies();
+                        deferred.resolve({ ajax: ajaxCompanies });
+                    } else {
+                        var ajaxCompanies = bhAdResources.getCompanies(params);
+                        deferred.resolve({ ajax: ajaxCompanies });
+                    }
+                }, 500);
+
+                return deferred.promise.then(function(res) {
+                    res.ajax.then(function(res) {
+                        return res.data.data;
+                    });
+                });
+
+             };
             $scope.handleAddLineItem = function() {
                 if ($scope.bForm !== undefined) {
                     $scope.bForm.$submitted = false;
@@ -98,7 +128,7 @@ angular.module('bhAdManager')
 
             $scope.handleSaveBooking = function(){
                 $log.info('handleSaveBooking');
-                if (vaildationBookingForm($scope.bookingForm) !== false ){
+                if (validationBookingForm($scope.bookingForm) !== false ){
                     if (environment === 'TEST') {
                         var newTaskDatas = [];
                         var bookingId = uuid();
@@ -134,7 +164,7 @@ angular.module('bhAdManager')
             }
             $scope.handleSyncingToDFP = function() {
                 $log.info('handleSyncingToDFP');
-                if (vaildationBookingForm($scope.bookingForm) !== false ){
+                if (validationBookingForm($scope.bookingForm) !== false ){
                     if (environment === 'TEST') {
                         $rootScope.$emit('handleAlert',{message: 'Test Success to DFP!', type: 'success'});
                         $scope.$hide();
@@ -247,7 +277,7 @@ angular.module('bhAdManager')
                     random4() + random4() + random4() + random4() + random4() + random4();
             };
 
-            var vaildationBookingForm = function(bookingForm) {
+            var validationBookingForm = function(bookingForm) {
                 var vail = true;
                 if (bookingForm.orderName === undefined) {
                     vail = false;
@@ -256,13 +286,20 @@ angular.module('bhAdManager')
                 if (bookingForm.orderColor === undefined) {
                     vail = false;
                 }
+                if (bookingForm.traffickerUser === undefined) {
+                    vail = false;
+                }
+                if (bookingForm.company === undefined) {
+                    vail = false;
+                }
                 if (bookingForm.lineItems.length > 0) {
                     for (var i = 0; i <  bookingForm.lineItems.length; i++) {
                         var lineItem = bookingForm.lineItems[i];
                         if (lineItem.name === undefined ||
                             lineItem.adUnits === undefined ||
                             lineItem.fromDate === undefined ||
-                            lineItem.toDate === undefined) {
+                            lineItem.toDate === undefined ||
+                            lineItem.units === undefined || isNaN(lineItem.units)) {
                             vail = false;
                         }
                     }

@@ -18,6 +18,23 @@ angular.module('bhAdManager')
                     timeout: 5000,
                 });
             },
+            getTraffickerUsers: function() {
+                return $http({
+                    url: '/dfp/users',
+                    method: 'GET',
+                    responseType: 'json',
+                    timeout: 5000,
+                });
+            },
+            getCompanies: function(params) {
+                return $http({
+                    url: '/dfp/companies',
+                    method: 'GET',
+                    responseType: 'json',
+                    timeout: 5000,
+                    params: params
+                });
+            },
             updateDfp: function() {
                 return $http({
                     url: '/gantt/ajax/updateDFP',

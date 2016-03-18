@@ -77,6 +77,23 @@ angular.module('bhAdManager')
                     timeout: 5000,
                 });
             },
+            getTraffickerUsers: function() {
+                return $http({
+                    url: '/dfp/users',
+                    method: 'GET',
+                    responseType: 'json',
+                    timeout: 5000,
+                });
+            },
+            getCompanies: function(params) {
+                return $http({
+                    url: '/dfp/companies',
+                    method: 'GET',
+                    responseType: 'json',
+                    timeout: 5000,
+                    params: params
+                });
+            },
             updateDfp: function() {
                 return $http({
                     url: '/gantt/ajax/updateDFP',
@@ -261,6 +278,7 @@ angular.module('bhAdManager')
                     orderId: undefined,
                     status: undefined,
                     id: undefined,
+                    isArchived: false,
                 },
                 filterRow: '',
                 filterTaskStatusOptions: [
@@ -457,6 +475,12 @@ angular.module('bhAdManager')
                         getReady(response.ganttData.data);
                         $scope.options.updateTime = response.ganttData.updateTime;
                         $scope.orders = response.ganttData.orders;
+                        $scope.dfpNetworkCode = response.ganttData.dfpNetworkCode;
+                        $scope.dfpEndPoint = 'https://www.google.com/dfp/main?networkCode=' + $scope.dfpNetworkCode +'#delivery/';
+
+                        Sample.getSamplatUsers().success(function(response) {
+                            $scope.traffickerUsers = response.data;
+                        });
                     });
                 } else {
                     bhAdResources.getGanttData().then(function(response) {
@@ -464,9 +488,19 @@ angular.module('bhAdManager')
                             getReady(response.data.ganttData.data);
                             $scope.options.updateTime = response.data.ganttData.updateTime;
                             $scope.orders = response.data.ganttData.orders;
+                            $scope.dfpNetworkCode = response.data.ganttData.dfpNetworkCode;
+                            $scope.dfpEndPoint = 'https://www.google.com/dfp/main?networkCode=' + $scope.dfpNetworkCode +'#delivery/';
+                            bhAdResources.getTraffickerUsers().then(function(response) {
+                                $scope.traffickerUsers = response.data.data;
+
+                            }, function(response) {
+                                $rootScope.$emit('handleAlert',{message: 'Get Trafficker Users Data Error!', type: 'danger'});
+                            });
                         } else {
                             $rootScope.$emit('handleAlert',{message: 'Load Data Error!', type: 'danger'});
                         }
+
+
                     }, function(response) {
                         $rootScope.$emit('handleAlert',{message: 'Load Data Error!', type: 'danger'});
                     });
@@ -488,13 +522,13 @@ angular.module('bhAdManager')
                 $scope.updateLoading = true;
                 $scope.options.isLoading = true;
                 if (environment === 'TEST') {
-                    Sample.getSampleData().success(function(response) {
-                        $scope.data = response.data;
-                    });
+                    $rootScope.$emit('handleAlert',{message: 'Update Data Success!', type: 'success.'});
+                    $scope.updateLoading = false;
+                    $scope.reload();
                 } else {
                     bhAdResources.updateDfp().then(function(response) {
                         if (response.data.status === 'ok') {
-                            $scope.updateLoading = true;
+                            $scope.updateLoading = false;
                             $rootScope.$emit('handleAlert',{message: 'Update Data Success!', type: 'success.'});
                             $scope.reload();
                         } else {
@@ -575,7 +609,7 @@ angular.module('bhAdManager')
                 }else {
                     bhAdResources.getOrder(orderId).then(function(response) {
                         if (response.data.status === 'ok') {
-                            $scope.selectedOrder = response.data;
+                            $scope.selectedOrder = response.data.data;
                         } else {
                             $rootScope.$emit('handleAlert',{message: 'Get Order Data Error!', type: 'danger'});
                         }
@@ -605,13 +639,14 @@ angular.module('bhAdManager')
             };
 
             $scope.handleInit = function(){
-                $scope.options.filterTask = {orderId: '', id: ''};
+                $scope.options.filterTask = {};
                 $scope.selectedOrder =  undefined;
                 $scope.selectedLineItem = undefined;
                 $scope.options.tabSelected = 'gantt';
             };
             $scope.createBooking = function() {
                 var $bookingFormScope = $scope.$new(true);
+                $bookingFormScope.traffickerUsers = $scope.traffickerUsers;
                 $bookingFormScope.ganttData = $scope.data;
                 $scope._bookingForm = $modal({
                     scope: $bookingFormScope,
@@ -633,10 +668,11 @@ angular.module('bhAdManager')
                 }
 
                 var $bookingFormScope = $scope.$new(true);
-                $bookingFormScope.ganttData = $scope.data;
 
                 bookingAjax.then(function(response) {
+                    $bookingFormScope.ganttData = $scope.data;
                     $bookingFormScope.editBookingData = response.data.data;
+                    $bookingFormScope.traffickerUsers = $scope.traffickerUsers;
                     $scope._bookingForm = $modal({
                         scope: $bookingFormScope,
                         title: '新增委刊單',
@@ -649,6 +685,42 @@ angular.module('bhAdManager')
                     $rootScope.$emit('handleAlert',{message: 'get Booking Data Error!', type: 'danger'});
                 });
             };
+            $scope.redirectEditOrder = function(orderId) {
+                var editPath = $scope.dfpEndPoint + 'OrderDetail/orderId=' + orderId;
+                window.open(editPath, '_blank');
+                updateDfpNotification();
+            };
+            $scope.redirectEditLineItem = function(orderId, lineItemId) {
+                var editPath = $scope.dfpEndPoint + 'LineItemDetail/orderId=' + orderId + '&lineItemId=' + lineItemId;
+                window.open(editPath, '_blank');
+                updateDfpNotification();
+            };
+            $scope.redirectCreateCreative = function(orderId, lineItemId) {
+                var editPath = $scope.dfpEndPoint + 'CreateCreative/orderId=' + orderId + '&lineItemId=' + lineItemId;
+                window.open(editPath, '_blank');
+                updateDfpNotification();
+            };
+            $scope.redirectEditCreative = function(creativeId) {
+                var editPath = $scope.dfpEndPoint + 'CreativeDetail/creativeId=' + creativeId;
+                window.open(editPath, '_blank');
+                updateDfpNotification();
+            };
+
+            $scope.updateDfpForNotification = function(){
+                $scope.handleUpdateDFP();
+                $scope.checkDfpUpdateModal.$promise.then($scope.checkDfpUpdateModal.hide);
+            }
+            var updateDfpNotification = function() {
+                var $checkDfpUpdateScope = $scope.$new(true);
+                $checkDfpUpdateScope.handleUpdateDFP = $scope.updateDfpForNotification;
+                $scope.checkDfpUpdateModal = $modal({
+                    scope: $checkDfpUpdateScope,
+                    title: '確認更新DFP',
+                    templateUrl: '../app/scripts/views/checkDfpUpdate.tpl.html',
+                    show: false,
+                });
+                $scope.checkDfpUpdateModal.$promise.then($scope.checkDfpUpdateModal.show);
+            }
 
             $rootScope.$on('filterOrderId', function(event, taskModel) {
                 $scope.options.filterTask.orderId = taskModel.orderId;
@@ -953,15 +1025,18 @@ angular.module('bhAdManager')
  */
 
 angular.module('bhAdManager')
-    .controller('bookingForm', ['$scope', '$timeout', '$log', 'moment', '$modal', '$http', 'bhAdResources', '$alert', '$rootScope', '$filter', '$popover',
-        function($scope, $timeout, $log, moment, $modal, $http, bhAdResources, $alert, $rootScope, $filter, $popover) {
+    .controller('bookingForm', ['$scope', '$timeout', '$log', 'moment', '$modal', '$http', 'Sample' ,'bhAdResources', '$alert', '$rootScope', '$filter', '$popover', '$q',
+        function($scope, $timeout, $log, moment, $modal, $http, Sample, bhAdResources, $alert, $rootScope, $filter, $popover, $q) {
             var defaultLineItem = {
                 id: undefined,
                 name: undefined,
+                units: 0,
                 adUnits: undefined,
                 fromDate: undefined,
                 toDate: undefined,
             };
+            // DFP Users tree;
+            $scope.traffickerUsers;
 
             $scope.bookingForm = {
                 bookingId: undefined,
@@ -969,6 +1044,8 @@ angular.module('bhAdManager')
                 orderName: undefined,
                 orderColor: undefined,
                 lineItems: [],
+                traffickerUser: undefined,
+                company: undefined,
             };
             // Is Edit Form
             if ($scope.editBookingData !== undefined) {
@@ -978,6 +1055,8 @@ angular.module('bhAdManager')
                     orderName: $scope.editBookingData.orderName,
                     orderColor: $scope.editBookingData.orderColor,
                     lineItems: $scope.editBookingData.lineItems,
+                    traffickerUser: $scope.editBookingData.traffickerUser,
+                    company: $scope.editBookingData.company
                 }
 
                 var deleteBookingOptions = {
@@ -1003,7 +1082,30 @@ angular.module('bhAdManager')
                 });
 
             }
+            var getCompaniesTimeout;
+            $scope.getCompanies = function(viewValue) {
+                var deferred = $q.defer();
+                var params = {search: viewValue};
 
+                $timeout.cancel(getCompaniesTimeout);
+
+                getCompaniesTimeout = $timeout(function() {
+                    if (environment === 'TEST') {
+                        var ajaxCompanies = Sample.getSampleCompanies();
+                        deferred.resolve({ ajax: ajaxCompanies });
+                    } else {
+                        var ajaxCompanies = bhAdResources.getCompanies(params);
+                        deferred.resolve({ ajax: ajaxCompanies });
+                    }
+                }, 500);
+
+                return deferred.promise.then(function(res) {
+                    res.ajax.then(function(res) {
+                        return res.data.data;
+                    });
+                });
+
+             };
             $scope.handleAddLineItem = function() {
                 if ($scope.bForm !== undefined) {
                     $scope.bForm.$submitted = false;
@@ -1042,7 +1144,7 @@ angular.module('bhAdManager')
 
             $scope.handleSaveBooking = function(){
                 $log.info('handleSaveBooking');
-                if (vaildationBookingForm($scope.bookingForm) !== false ){
+                if (validationBookingForm($scope.bookingForm) !== false ){
                     if (environment === 'TEST') {
                         var newTaskDatas = [];
                         var bookingId = uuid();
@@ -1078,7 +1180,7 @@ angular.module('bhAdManager')
             }
             $scope.handleSyncingToDFP = function() {
                 $log.info('handleSyncingToDFP');
-                if (vaildationBookingForm($scope.bookingForm) !== false ){
+                if (validationBookingForm($scope.bookingForm) !== false ){
                     if (environment === 'TEST') {
                         $rootScope.$emit('handleAlert',{message: 'Test Success to DFP!', type: 'success'});
                         $scope.$hide();
@@ -1191,7 +1293,7 @@ angular.module('bhAdManager')
                     random4() + random4() + random4() + random4() + random4() + random4();
             };
 
-            var vaildationBookingForm = function(bookingForm) {
+            var validationBookingForm = function(bookingForm) {
                 var vail = true;
                 if (bookingForm.orderName === undefined) {
                     vail = false;
@@ -1200,13 +1302,20 @@ angular.module('bhAdManager')
                 if (bookingForm.orderColor === undefined) {
                     vail = false;
                 }
+                if (bookingForm.traffickerUser === undefined) {
+                    vail = false;
+                }
+                if (bookingForm.company === undefined) {
+                    vail = false;
+                }
                 if (bookingForm.lineItems.length > 0) {
                     for (var i = 0; i <  bookingForm.lineItems.length; i++) {
                         var lineItem = bookingForm.lineItems[i];
                         if (lineItem.name === undefined ||
                             lineItem.adUnits === undefined ||
                             lineItem.fromDate === undefined ||
-                            lineItem.toDate === undefined) {
+                            lineItem.toDate === undefined ||
+                            lineItem.units === undefined || isNaN(lineItem.units)) {
                             vail = false;
                         }
                     }
@@ -1243,8 +1352,22 @@ angular.module('admanager.templates', []).run(['$templateCache', function($templ
         '                                        <div class="col-sm-10">\n' +
         '                                            <input type="text" class="form-control" id="orderName" name="orderName" ng-model="bookingForm.orderName" required>\n' +
         '                                            <div ng-show="bForm.$submitted || bForm.orderName.$touched">\n' +
-        '                                              <div class="error" ng-show="bForm.orderName.$error.required">填寫委刊單</div>\n' +
+        '                                                <div class="error" ng-show="bForm.orderName.$error.required">填寫委刊單</div>\n' +
         '                                            </div>\n' +
+        '                                        </div>\n' +
+        '                                    </div>\n' +
+        '                                    <div class="form-group">\n' +
+        '                                        <label class="control-label col-sm-2" for="orderName">委刊單刊登者</label>\n' +
+        '                                        <div class="col-sm-10">\n' +
+        '                                            <button type="button" class="btn btn-default" ng-model="bookingForm.traffickerUser" data-html="1" placeholder="請選擇刊登者" bs-options="tUser as tUser.email for tUser in traffickerUsers" bs-select>\n' +
+        '                                              Action <span class="caret"></span>\n' +
+        '                                            </button>\n' +
+        '                                        </div>\n' +
+        '                                    </div>\n' +
+        '                                    <div class="form-group">\n' +
+        '                                        <label class="control-label col-sm-2" for="orderName">廣告客戶</label>\n' +
+        '                                        <div class="col-sm-10">\n' +
+        '                                        <input type="text" class="form-control" ng-model="bookingForm.company" data-animation="am-flip-x" bs-options="companies as companies.name for companies in getCompanies($viewValue)" placeholder="輸入客戶名稱" bs-typeahead>\n' +
         '                                        </div>\n' +
         '                                    </div>\n' +
         '                                    <div class="form-group">\n' +
@@ -1252,7 +1375,7 @@ angular.module('admanager.templates', []).run(['$templateCache', function($templ
         '                                        <div class="col-sm-10">\n' +
         '                                            <div class="input-group col-sm-12">\n' +
         '                                                <label class="input-group-addon" ng-style="{\'background-color\': bookingForm.orderColor}">&nbsp;&nbsp;&nbsp;&nbsp;</label>\n' +
-        '                                                <input type="text" class="form-control" name="orderColor"  colorpicker colorpicker-parent="true" ng-model="bookingForm.orderColor" required>\n' +
+        '                                                <input type="text" class="form-control" name="orderColor" colorpicker colorpicker-parent="true" ng-model="bookingForm.orderColor" required>\n' +
         '                                            </div>\n' +
         '                                            <div class="col-sm-12" ng-show="bForm.$submitted || bForm.orderColor.$touched">\n' +
         '                                                <div class="error" ng-show="bForm.orderColor.$error.required">選取背景色</div>\n' +
@@ -1277,11 +1400,20 @@ angular.module('admanager.templates', []).run(['$templateCache', function($templ
         '                                        <div class="form-group">\n' +
         '                                            <label class="control-label col-sm-2" for="{{ \'lineItemAdUnits\' + $index }}">廣告單元</label>\n' +
         '                                            <div class="col-sm-10">\n' +
-        '                                                <select name="{{ \'lineItemAdUnits\' + $index }}" class="form-control"  ng-model="lineItem.adUnits" required>\n' +
+        '                                                <select name="{{ \'lineItemAdUnits\' + $index }}" class="form-control" ng-model="lineItem.adUnits" required>\n' +
         '                                                    <option ng-repeat="option in ganttData track by option.id " value="{{option.id}}" ng-selected="option.id === lineItem.adUnits">{{option.name}}</option>\n' +
         '                                                </select>\n' +
         '                                                <div ng-show="bForm.$submitted || bForm[\'lineItemAdUnits\'+ $index].$touched">\n' +
         '                                                    <div class="error" ng-show="bForm[\'lineItemAdUnits\'+ $index].$error.required">填寫廣告單元</div>\n' +
+        '                                                </div>\n' +
+        '                                            </div>\n' +
+        '                                        </div>\n' +
+        '                                        <div class="form-group">\n' +
+        '                                            <label class="control-label col-sm-2" for="{{ \'units\' + $index }}">曝光次數</label>\n' +
+        '                                            <div class="col-sm-10">\n' +
+        '                                                <input type="text" class="form-control" name="{{ \'units\' + $index }}" ng-model="lineItem.units" required>\n' +
+        '                                                <div ng-show="bForm.$submitted || bForm[\'units\'+$index].$touched">\n' +
+        '                                                    <div class="error" ng-show="bForm[\'units\'+$index].$error.required">請填寫曝光次數(數字)</div>\n' +
         '                                                </div>\n' +
         '                                            </div>\n' +
         '                                        </div>\n' +
@@ -1315,18 +1447,15 @@ angular.module('admanager.templates', []).run(['$templateCache', function($templ
         '                                    <button class="btn btn-default" type="button" ng-click="handleAddLineItem()">新增委刊項</button>\n' +
         '                                </div>\n' +
         '                            </div>\n' +
-        '\n' +
         '                        </form>\n' +
         '                    </div>\n' +
         '                </div>\n' +
         '                <div class="modal-footer">\n' +
-        '                <div class="form-actions">\n' +
-        '                    <button id="handle-delete-booking" ng-if="bookingForm.isEdit" class="btn btn-danger" ng-click="handlePopoverConfirm(\'handleDeleteBooking\', $event)"><i class="glyphicon glyphicon-trash"></i>Delete</button>\n' +
-        '                    <button class="btn btn-primary" type="submit" ng-click="handleSaveBooking()">儲存 Booking</button>\n' +
-        '                    <button id="handle-sycing-dfp" ng-if="bookingForm.isEdit" class="btn btn-success" type="submit" ng-click="handlePopoverConfirm(\'handleSyncingToDFP\', $event)">同步到DFP</button>\n' +
-        '                </div>\n' +
-        '\n' +
-        '\n' +
+        '                    <div class="form-actions">\n' +
+        '                        <button id="handle-delete-booking" ng-if="bookingForm.isEdit" class="btn btn-danger" ng-click="handlePopoverConfirm(\'handleDeleteBooking\', $event)"><i class="glyphicon glyphicon-trash"></i>Delete</button>\n' +
+        '                        <button class="btn btn-primary" type="submit" ng-click="handleSaveBooking()">儲存 Booking</button>\n' +
+        '                        <button id="handle-sycing-dfp" ng-if="bookingForm.isEdit" class="btn btn-success" type="submit" ng-click="handlePopoverConfirm(\'handleSyncingToDFP\', $event)">同步到DFP</button>\n' +
+        '                    </div>\n' +
         '                    <!-- <button type="button" class="btn btn-default" ng-click="$hide()">Close</button> -->\n' +
         '                </div>\n' +
         '            </div>\n' +
@@ -1369,6 +1498,25 @@ angular.module('admanager.templates', []).run(['$templateCache', function($templ
         '                <div class="col-sm-11">\n' +
         '                    <button type="button" ng-click="taskSaveColor()" class="btn btn-primary">儲存顏色</button>\n' +
         '                    <button type="button" class="btn btn-default" ng-click="$hide()">取消編輯</button>\n' +
+        '                </div>\n' +
+        '            </div>\n' +
+        '        </div>\n' +
+        '    </div>\n' +
+        '</div>\n' +
+        '');
+    $templateCache.put('../app/scripts/views/checkDfpUpdate.tpl.html',
+        '<div id="checkDfpUpdate" class="modal" tabindex="-1" role="dialog" ng-controller="bookingForm">\n' +
+        '    <div class="modal-dialog modal-lg">\n' +
+        '        <div class="modal-content">\n' +
+        '            <div class="modal-header" ng-show="title">\n' +
+        '                <button type="button" class="close" ng-click="$hide()">&times;</button>\n' +
+        '                <h4 class="modal-title" ng-bind-html="title"></h4>\n' +
+        '            </div>\n' +
+        '            <div class="modal-body">\n' +
+        '                如有在DFP更新過資料請點擊更新圖表\n' +
+        '                <button class="btn btn-default" ng-click="handleUpdateDFP()">更新圖表</button>\n' +
+        '                <div class="modal-footer">\n' +
+        '                    <button type="button" class="btn btn-default" ng-click="$hide()">Close</button>\n' +
         '                </div>\n' +
         '            </div>\n' +
         '        </div>\n' +

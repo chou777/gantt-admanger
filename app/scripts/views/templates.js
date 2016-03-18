@@ -20,8 +20,22 @@ angular.module('admanager.templates', []).run(['$templateCache', function($templ
         '                                        <div class="col-sm-10">\n' +
         '                                            <input type="text" class="form-control" id="orderName" name="orderName" ng-model="bookingForm.orderName" required>\n' +
         '                                            <div ng-show="bForm.$submitted || bForm.orderName.$touched">\n' +
-        '                                              <div class="error" ng-show="bForm.orderName.$error.required">填寫委刊單</div>\n' +
+        '                                                <div class="error" ng-show="bForm.orderName.$error.required">填寫委刊單</div>\n' +
         '                                            </div>\n' +
+        '                                        </div>\n' +
+        '                                    </div>\n' +
+        '                                    <div class="form-group">\n' +
+        '                                        <label class="control-label col-sm-2" for="orderName">委刊單刊登者</label>\n' +
+        '                                        <div class="col-sm-10">\n' +
+        '                                            <button type="button" class="btn btn-default" ng-model="bookingForm.traffickerUser" data-html="1" placeholder="請選擇刊登者" bs-options="tUser as tUser.email for tUser in traffickerUsers" bs-select>\n' +
+        '                                              Action <span class="caret"></span>\n' +
+        '                                            </button>\n' +
+        '                                        </div>\n' +
+        '                                    </div>\n' +
+        '                                    <div class="form-group">\n' +
+        '                                        <label class="control-label col-sm-2" for="orderName">廣告客戶</label>\n' +
+        '                                        <div class="col-sm-10">\n' +
+        '                                        <input type="text" class="form-control" ng-model="bookingForm.company" data-animation="am-flip-x" bs-options="companies as companies.name for companies in getCompanies($viewValue)" placeholder="輸入客戶名稱" bs-typeahead>\n' +
         '                                        </div>\n' +
         '                                    </div>\n' +
         '                                    <div class="form-group">\n' +
@@ -29,7 +43,7 @@ angular.module('admanager.templates', []).run(['$templateCache', function($templ
         '                                        <div class="col-sm-10">\n' +
         '                                            <div class="input-group col-sm-12">\n' +
         '                                                <label class="input-group-addon" ng-style="{\'background-color\': bookingForm.orderColor}">&nbsp;&nbsp;&nbsp;&nbsp;</label>\n' +
-        '                                                <input type="text" class="form-control" name="orderColor"  colorpicker colorpicker-parent="true" ng-model="bookingForm.orderColor" required>\n' +
+        '                                                <input type="text" class="form-control" name="orderColor" colorpicker colorpicker-parent="true" ng-model="bookingForm.orderColor" required>\n' +
         '                                            </div>\n' +
         '                                            <div class="col-sm-12" ng-show="bForm.$submitted || bForm.orderColor.$touched">\n' +
         '                                                <div class="error" ng-show="bForm.orderColor.$error.required">選取背景色</div>\n' +
@@ -54,11 +68,20 @@ angular.module('admanager.templates', []).run(['$templateCache', function($templ
         '                                        <div class="form-group">\n' +
         '                                            <label class="control-label col-sm-2" for="{{ \'lineItemAdUnits\' + $index }}">廣告單元</label>\n' +
         '                                            <div class="col-sm-10">\n' +
-        '                                                <select name="{{ \'lineItemAdUnits\' + $index }}" class="form-control"  ng-model="lineItem.adUnits" required>\n' +
+        '                                                <select name="{{ \'lineItemAdUnits\' + $index }}" class="form-control" ng-model="lineItem.adUnits" required>\n' +
         '                                                    <option ng-repeat="option in ganttData track by option.id " value="{{option.id}}" ng-selected="option.id === lineItem.adUnits">{{option.name}}</option>\n' +
         '                                                </select>\n' +
         '                                                <div ng-show="bForm.$submitted || bForm[\'lineItemAdUnits\'+ $index].$touched">\n' +
         '                                                    <div class="error" ng-show="bForm[\'lineItemAdUnits\'+ $index].$error.required">填寫廣告單元</div>\n' +
+        '                                                </div>\n' +
+        '                                            </div>\n' +
+        '                                        </div>\n' +
+        '                                        <div class="form-group">\n' +
+        '                                            <label class="control-label col-sm-2" for="{{ \'units\' + $index }}">曝光次數</label>\n' +
+        '                                            <div class="col-sm-10">\n' +
+        '                                                <input type="text" class="form-control" name="{{ \'units\' + $index }}" ng-model="lineItem.units" required>\n' +
+        '                                                <div ng-show="bForm.$submitted || bForm[\'units\'+$index].$touched">\n' +
+        '                                                    <div class="error" ng-show="bForm[\'units\'+$index].$error.required">請填寫曝光次數(數字)</div>\n' +
         '                                                </div>\n' +
         '                                            </div>\n' +
         '                                        </div>\n' +
@@ -92,18 +115,15 @@ angular.module('admanager.templates', []).run(['$templateCache', function($templ
         '                                    <button class="btn btn-default" type="button" ng-click="handleAddLineItem()">新增委刊項</button>\n' +
         '                                </div>\n' +
         '                            </div>\n' +
-        '\n' +
         '                        </form>\n' +
         '                    </div>\n' +
         '                </div>\n' +
         '                <div class="modal-footer">\n' +
-        '                <div class="form-actions">\n' +
-        '                    <button id="handle-delete-booking" ng-if="bookingForm.isEdit" class="btn btn-danger" ng-click="handlePopoverConfirm(\'handleDeleteBooking\', $event)"><i class="glyphicon glyphicon-trash"></i>Delete</button>\n' +
-        '                    <button class="btn btn-primary" type="submit" ng-click="handleSaveBooking()">儲存 Booking</button>\n' +
-        '                    <button id="handle-sycing-dfp" ng-if="bookingForm.isEdit" class="btn btn-success" type="submit" ng-click="handlePopoverConfirm(\'handleSyncingToDFP\', $event)">同步到DFP</button>\n' +
-        '                </div>\n' +
-        '\n' +
-        '\n' +
+        '                    <div class="form-actions">\n' +
+        '                        <button id="handle-delete-booking" ng-if="bookingForm.isEdit" class="btn btn-danger" ng-click="handlePopoverConfirm(\'handleDeleteBooking\', $event)"><i class="glyphicon glyphicon-trash"></i>Delete</button>\n' +
+        '                        <button class="btn btn-primary" type="submit" ng-click="handleSaveBooking()">儲存 Booking</button>\n' +
+        '                        <button id="handle-sycing-dfp" ng-if="bookingForm.isEdit" class="btn btn-success" type="submit" ng-click="handlePopoverConfirm(\'handleSyncingToDFP\', $event)">同步到DFP</button>\n' +
+        '                    </div>\n' +
         '                    <!-- <button type="button" class="btn btn-default" ng-click="$hide()">Close</button> -->\n' +
         '                </div>\n' +
         '            </div>\n' +
@@ -146,6 +166,25 @@ angular.module('admanager.templates', []).run(['$templateCache', function($templ
         '                <div class="col-sm-11">\n' +
         '                    <button type="button" ng-click="taskSaveColor()" class="btn btn-primary">儲存顏色</button>\n' +
         '                    <button type="button" class="btn btn-default" ng-click="$hide()">取消編輯</button>\n' +
+        '                </div>\n' +
+        '            </div>\n' +
+        '        </div>\n' +
+        '    </div>\n' +
+        '</div>\n' +
+        '');
+    $templateCache.put('../app/scripts/views/checkDfpUpdate.tpl.html',
+        '<div id="checkDfpUpdate" class="modal" tabindex="-1" role="dialog" ng-controller="bookingForm">\n' +
+        '    <div class="modal-dialog modal-lg">\n' +
+        '        <div class="modal-content">\n' +
+        '            <div class="modal-header" ng-show="title">\n' +
+        '                <button type="button" class="close" ng-click="$hide()">&times;</button>\n' +
+        '                <h4 class="modal-title" ng-bind-html="title"></h4>\n' +
+        '            </div>\n' +
+        '            <div class="modal-body">\n' +
+        '                如有在DFP更新過資料請點擊更新圖表\n' +
+        '                <button class="btn btn-default" ng-click="handleUpdateDFP()">更新圖表</button>\n' +
+        '                <div class="modal-footer">\n' +
+        '                    <button type="button" class="btn btn-default" ng-click="$hide()">Close</button>\n' +
         '                </div>\n' +
         '            </div>\n' +
         '        </div>\n' +

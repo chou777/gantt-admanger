@@ -1,0 +1,17 @@
+<div id="checkDfpUpdate" class="modal" tabindex="-1" role="dialog" ng-controller="bookingForm">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" ng-show="title">
+                <button type="button" class="close" ng-click="$hide()">&times;</button>
+                <h4 class="modal-title" ng-bind-html="title"></h4>
+            </div>
+            <div class="modal-body">
+                如有在DFP更新過資料請點擊更新圖表
+                <button class="btn btn-default" ng-click="handleUpdateDFP()">更新圖表</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" ng-click="$hide()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
